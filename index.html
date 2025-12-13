@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>Noise Grid Effects</title>
+    <title>Creative Tools Collection</title>
     <style>
         * {
             margin: 0;
@@ -20,630 +20,235 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow-x: hidden;
             padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
         }
 
         header {
             text-align: center;
-            padding: 20px 16px 16px;
-            background: rgba(26, 26, 46, 0.8);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 40px 20px 32px;
         }
 
         h1 {
-            font-size: 24px;
-            font-weight: 600;
-            letter-spacing: -0.5px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-size: 36px;
+            font-weight: 700;
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            margin-bottom: 12px;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            color: #a0a0a0;
+            font-weight: 400;
+            letter-spacing: 0.3px;
         }
 
         .container {
             flex: 1;
-            display: flex;
-            flex-direction: column;
-            padding: 16px;
-            gap: 16px;
-            max-width: 1200px;
+            max-width: 1000px;
             width: 100%;
             margin: 0 auto;
+            padding: 0 20px 40px;
         }
 
-        .canvas-wrapper {
-            position: relative;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        canvas {
-            display: block;
-            width: 100%;
-            height: auto;
-            touch-action: none;
-        }
-
-        .controls {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .button-group {
+        .tools-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
+            grid-template-columns: 1fr;
+            gap: 20px;
         }
 
-        button {
-            padding: 14px 20px;
-            font-size: 15px;
-            font-weight: 500;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-            touch-action: manipulation;
-        }
-
-        button:active {
-            transform: translateY(1px);
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-        }
-
-        button.clear {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            box-shadow: 0 4px 12px rgba(245, 87, 108, 0.3);
-        }
-
-        .effects-panel {
+        .tool-card {
             background: rgba(26, 26, 46, 0.6);
             backdrop-filter: blur(10px);
-            border-radius: 12px;
-            padding: 16px;
+            border-radius: 16px;
             border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: block;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
         }
 
-        .effects-title {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 12px;
-            color: #a0a0a0;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-size: 13px;
+        .tool-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+            border-color: rgba(102, 126, 234, 0.4);
         }
 
-        .effects-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 10px;
+        .tool-card:active {
+            transform: translateY(-2px);
         }
 
-        .effect-btn {
-            padding: 12px 16px;
-            background: rgba(102, 126, 234, 0.1);
-            border: 1px solid rgba(102, 126, 234, 0.3);
-            color: #a0a0a0;
-            box-shadow: none;
+        .tool-icon {
+            height: 120px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 48px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tool-icon::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% {
+                transform: translate(-25%, -25%) rotate(0deg);
+            }
+            50% {
+                transform: translate(25%, 25%) rotate(180deg);
+            }
+        }
+
+        .tool-content {
+            padding: 24px;
+        }
+
+        .tool-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 8px;
+            letter-spacing: -0.3px;
+        }
+
+        .tool-description {
+            font-size: 15px;
+            color: #a0a0a0;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .tool-tags {
+            display: flex;
+            flex-wrap: wrap;
             gap: 8px;
+        }
+
+        .tag {
+            padding: 6px 12px;
+            background: rgba(102, 126, 234, 0.15);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 6px;
+            font-size: 12px;
+            color: #9b9bdb;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 32px 20px;
+            color: #666;
             font-size: 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        .effect-btn.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-color: transparent;
-            color: white;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        footer a {
+            color: #667eea;
+            text-decoration: none;
+            transition: color 0.2s;
         }
 
-        .effect-btn .indicator {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #4a4a6a;
-            transition: all 0.2s ease;
-        }
-
-        .effect-btn.active .indicator {
-            background: #4ade80;
-            box-shadow: 0 0 8px #4ade80;
+        footer a:hover {
+            color: #764ba2;
         }
 
         @media (min-width: 640px) {
-            .container {
-                padding: 24px;
-                gap: 20px;
-            }
-
-            header {
-                padding: 28px 24px 20px;
+            .tools-grid {
+                grid-template-columns: repeat(2, 1fr);
             }
 
             h1 {
-                font-size: 32px;
+                font-size: 48px;
             }
 
-            .button-group {
-                grid-template-columns: repeat(2, minmax(200px, 1fr));
-            }
-
-            .effects-grid {
-                grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            .subtitle {
+                font-size: 18px;
             }
         }
 
         @media (min-width: 1024px) {
-            .container {
-                flex-direction: row;
-                align-items: flex-start;
+            .tools-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 24px;
             }
+        }
 
-            .canvas-wrapper {
-                flex: 1;
-            }
-
-            .controls {
-                width: 320px;
-                flex-shrink: 0;
-            }
-
-            .effects-grid {
-                grid-template-columns: 1fr 1fr;
-            }
+        /* Special gradient for noise-grid card */
+        .tool-card[href*="noise-grid"] .tool-icon {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
         }
     </style>
 </head>
 <body>
     <header>
-        <h1>Noise Grid Effects</h1>
+        <h1>Creative Tools</h1>
+        <p class="subtitle">A collection of interactive web experiments</p>
     </header>
 
     <div class="container">
-        <div class="canvas-wrapper">
-            <canvas id="noiseCanvas"></canvas>
-        </div>
+        <div class="tools-grid">
+            <a href="noise-grid/" class="tool-card">
+                <div class="tool-icon">✨</div>
+                <div class="tool-content">
+                    <h2 class="tool-title">Noise Grid Effects</h2>
+                    <p class="tool-description">
+                        Generate random static noise with subtle color gradients and apply various pixel-based visualization effects like ripples, vortex, and kaleidoscope.
+                    </p>
+                    <div class="tool-tags">
+                        <span class="tag">Canvas</span>
+                        <span class="tag">Animation</span>
+                        <span class="tag">Visual</span>
+                    </div>
+                </div>
+            </a>
 
-        <div class="controls">
-            <div class="button-group">
-                <button id="generateBtn">Generate Noise</button>
-                <button id="clearBtn" class="clear">Clear Grid</button>
+            <!-- Placeholder cards for future tools -->
+            <div class="tool-card" style="opacity: 0.4; pointer-events: none;">
+                <div class="tool-icon" style="background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);">🎨</div>
+                <div class="tool-content">
+                    <h2 class="tool-title">Coming Soon</h2>
+                    <p class="tool-description">
+                        More creative tools and experiments are on the way.
+                    </p>
+                    <div class="tool-tags">
+                        <span class="tag">TBD</span>
+                    </div>
+                </div>
             </div>
 
-            <div class="effects-panel">
-                <div class="effects-title">Effects</div>
-                <div class="effects-grid" id="effectsGrid"></div>
+            <div class="tool-card" style="opacity: 0.4; pointer-events: none;">
+                <div class="tool-icon" style="background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);">🔮</div>
+                <div class="tool-content">
+                    <h2 class="tool-title">Coming Soon</h2>
+                    <p class="tool-description">
+                        More creative tools and experiments are on the way.
+                    </p>
+                    <div class="tool-tags">
+                        <span class="tag">TBD</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <script>
-        class NoiseGridApp {
-            constructor() {
-                this.canvas = document.getElementById('noiseCanvas');
-                this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
-                this.gridSize = 256;
-                this.pixelSize = 2;
-                this.baseImageData = null;
-                this.activeEffects = new Set();
-                this.animationFrame = null;
-                this.time = 0;
-
-                this.effects = [
-                    { id: 'ripple', name: 'Ripples', fn: this.rippleEffect.bind(this) },
-                    { id: 'vortex', name: 'Vortex', fn: this.vortexEffect.bind(this) },
-                    { id: 'wave', name: 'Wave', fn: this.waveEffect.bind(this) },
-                    { id: 'spiral', name: 'Spiral', fn: this.spiralEffect.bind(this) },
-                    { id: 'zoom', name: 'Zoom Pulse', fn: this.zoomEffect.bind(this) },
-                    { id: 'kaleidoscope', name: 'Kaleidoscope', fn: this.kaleidoscopeEffect.bind(this) },
-                    { id: 'pixelate', name: 'Pixelate', fn: this.pixelateEffect.bind(this) },
-                    { id: 'chromatic', name: 'Chromatic', fn: this.chromaticEffect.bind(this) }
-                ];
-
-                this.init();
-            }
-
-            init() {
-                this.setupCanvas();
-                this.setupEventListeners();
-                this.renderEffectButtons();
-                window.addEventListener('resize', () => this.setupCanvas());
-            }
-
-            setupCanvas() {
-                const size = Math.min(window.innerWidth - 32, 600);
-                this.canvas.width = this.gridSize;
-                this.canvas.height = this.gridSize;
-                this.canvas.style.width = size + 'px';
-                this.canvas.style.height = size + 'px';
-
-                if (this.baseImageData) {
-                    this.ctx.putImageData(this.baseImageData, 0, 0);
-                }
-            }
-
-            setupEventListeners() {
-                document.getElementById('generateBtn').addEventListener('click', () => this.generateNoise());
-                document.getElementById('clearBtn').addEventListener('click', () => this.clearGrid());
-            }
-
-            generateNoise() {
-                const imageData = this.ctx.createImageData(this.gridSize, this.gridSize);
-                const data = imageData.data;
-
-                // Create gradient colors for subtle color variation
-                const gradients = [
-                    { r: 102, g: 126, b: 234 }, // Purple-blue
-                    { r: 118, g: 75, b: 162 },  // Purple
-                    { r: 240, g: 147, b: 251 }  // Pink
-                ];
-
-                for (let y = 0; y < this.gridSize; y++) {
-                    for (let x = 0; x < this.gridSize; x++) {
-                        const index = (y * this.gridSize + x) * 4;
-
-                        // Random noise
-                        const noise = Math.random();
-
-                        // Gradient based on position
-                        const gradientIndex = Math.floor(Math.random() * gradients.length);
-                        const gradient = gradients[gradientIndex];
-
-                        // Mix noise with gradient
-                        const intensity = noise * 0.6 + 0.2;
-
-                        data[index] = gradient.r * intensity;
-                        data[index + 1] = gradient.g * intensity;
-                        data[index + 2] = gradient.b * intensity;
-                        data[index + 3] = 255;
-                    }
-                }
-
-                this.baseImageData = imageData;
-                this.ctx.putImageData(imageData, 0, 0);
-            }
-
-            clearGrid() {
-                this.ctx.clearRect(0, 0, this.gridSize, this.gridSize);
-                this.baseImageData = null;
-                this.stopAllEffects();
-            }
-
-            renderEffectButtons() {
-                const grid = document.getElementById('effectsGrid');
-                this.effects.forEach(effect => {
-                    const btn = document.createElement('button');
-                    btn.className = 'effect-btn';
-                    btn.innerHTML = `<span class="indicator"></span><span>${effect.name}</span>`;
-                    btn.addEventListener('click', () => this.toggleEffect(effect.id, btn));
-                    btn.dataset.effectId = effect.id;
-                    grid.appendChild(btn);
-                });
-            }
-
-            toggleEffect(effectId, btn) {
-                if (this.activeEffects.has(effectId)) {
-                    this.activeEffects.delete(effectId);
-                    btn.classList.remove('active');
-                } else {
-                    this.activeEffects.add(effectId);
-                    btn.classList.add('active');
-                }
-
-                if (this.activeEffects.size > 0 && !this.animationFrame) {
-                    this.animate();
-                } else if (this.activeEffects.size === 0) {
-                    this.stopAnimation();
-                }
-            }
-
-            stopAllEffects() {
-                this.activeEffects.clear();
-                document.querySelectorAll('.effect-btn').forEach(btn => {
-                    btn.classList.remove('active');
-                });
-                this.stopAnimation();
-            }
-
-            stopAnimation() {
-                if (this.animationFrame) {
-                    cancelAnimationFrame(this.animationFrame);
-                    this.animationFrame = null;
-                }
-                this.time = 0;
-                if (this.baseImageData) {
-                    this.ctx.putImageData(this.baseImageData, 0, 0);
-                }
-            }
-
-            animate() {
-                if (!this.baseImageData) {
-                    this.stopAnimation();
-                    return;
-                }
-
-                this.time += 0.016;
-
-                // Start with base image
-                this.ctx.putImageData(this.baseImageData, 0, 0);
-
-                // Apply all active effects
-                this.activeEffects.forEach(effectId => {
-                    const effect = this.effects.find(e => e.id === effectId);
-                    if (effect) {
-                        effect.fn();
-                    }
-                });
-
-                this.animationFrame = requestAnimationFrame(() => this.animate());
-            }
-
-            rippleEffect() {
-                const imageData = this.ctx.getImageData(0, 0, this.gridSize, this.gridSize);
-                const tempData = new Uint8ClampedArray(imageData.data);
-                const centerX = this.gridSize / 2;
-                const centerY = this.gridSize / 2;
-                const speed = 20;
-                const amplitude = 8;
-
-                for (let y = 0; y < this.gridSize; y++) {
-                    for (let x = 0; x < this.gridSize; x++) {
-                        const dx = x - centerX;
-                        const dy = y - centerY;
-                        const distance = Math.sqrt(dx * dx + dy * dy);
-                        const wave = Math.sin(distance / 10 - this.time * speed) * amplitude;
-
-                        const newX = Math.round(x + wave * dx / Math.max(distance, 1));
-                        const newY = Math.round(y + wave * dy / Math.max(distance, 1));
-
-                        if (newX >= 0 && newX < this.gridSize && newY >= 0 && newY < this.gridSize) {
-                            const oldIndex = (y * this.gridSize + x) * 4;
-                            const newIndex = (newY * this.gridSize + newX) * 4;
-
-                            imageData.data[oldIndex] = tempData[newIndex];
-                            imageData.data[oldIndex + 1] = tempData[newIndex + 1];
-                            imageData.data[oldIndex + 2] = tempData[newIndex + 2];
-                        }
-                    }
-                }
-
-                this.ctx.putImageData(imageData, 0, 0);
-            }
-
-            vortexEffect() {
-                const imageData = this.ctx.getImageData(0, 0, this.gridSize, this.gridSize);
-                const tempData = new Uint8ClampedArray(imageData.data);
-                const centerX = this.gridSize / 2;
-                const centerY = this.gridSize / 2;
-                const strength = 0.5;
-
-                for (let y = 0; y < this.gridSize; y++) {
-                    for (let x = 0; x < this.gridSize; x++) {
-                        const dx = x - centerX;
-                        const dy = y - centerY;
-                        const distance = Math.sqrt(dx * dx + dy * dy);
-                        const angle = Math.atan2(dy, dx);
-                        const rotation = (this.time * 2 + distance / 20) * strength;
-
-                        const newAngle = angle + rotation;
-                        const newX = Math.round(centerX + Math.cos(newAngle) * distance);
-                        const newY = Math.round(centerY + Math.sin(newAngle) * distance);
-
-                        if (newX >= 0 && newX < this.gridSize && newY >= 0 && newY < this.gridSize) {
-                            const oldIndex = (y * this.gridSize + x) * 4;
-                            const newIndex = (newY * this.gridSize + newX) * 4;
-
-                            imageData.data[oldIndex] = tempData[newIndex];
-                            imageData.data[oldIndex + 1] = tempData[newIndex + 1];
-                            imageData.data[oldIndex + 2] = tempData[newIndex + 2];
-                        }
-                    }
-                }
-
-                this.ctx.putImageData(imageData, 0, 0);
-            }
-
-            waveEffect() {
-                const imageData = this.ctx.getImageData(0, 0, this.gridSize, this.gridSize);
-                const tempData = new Uint8ClampedArray(imageData.data);
-                const amplitude = 10;
-                const frequency = 0.05;
-
-                for (let y = 0; y < this.gridSize; y++) {
-                    for (let x = 0; x < this.gridSize; x++) {
-                        const waveX = Math.sin(y * frequency + this.time * 3) * amplitude;
-                        const waveY = Math.cos(x * frequency + this.time * 3) * amplitude;
-
-                        const newX = Math.round(x + waveX);
-                        const newY = Math.round(y + waveY);
-
-                        if (newX >= 0 && newX < this.gridSize && newY >= 0 && newY < this.gridSize) {
-                            const oldIndex = (y * this.gridSize + x) * 4;
-                            const newIndex = (newY * this.gridSize + newX) * 4;
-
-                            imageData.data[oldIndex] = tempData[newIndex];
-                            imageData.data[oldIndex + 1] = tempData[newIndex + 1];
-                            imageData.data[oldIndex + 2] = tempData[newIndex + 2];
-                        }
-                    }
-                }
-
-                this.ctx.putImageData(imageData, 0, 0);
-            }
-
-            spiralEffect() {
-                const imageData = this.ctx.getImageData(0, 0, this.gridSize, this.gridSize);
-                const tempData = new Uint8ClampedArray(imageData.data);
-                const centerX = this.gridSize / 2;
-                const centerY = this.gridSize / 2;
-
-                for (let y = 0; y < this.gridSize; y++) {
-                    for (let x = 0; x < this.gridSize; x++) {
-                        const dx = x - centerX;
-                        const dy = y - centerY;
-                        const distance = Math.sqrt(dx * dx + dy * dy);
-                        const angle = Math.atan2(dy, dx);
-
-                        const spiral = distance * 0.02 + this.time * 2;
-                        const newAngle = angle + spiral;
-
-                        const newX = Math.round(centerX + Math.cos(newAngle) * distance);
-                        const newY = Math.round(centerY + Math.sin(newAngle) * distance);
-
-                        if (newX >= 0 && newX < this.gridSize && newY >= 0 && newY < this.gridSize) {
-                            const oldIndex = (y * this.gridSize + x) * 4;
-                            const newIndex = (newY * this.gridSize + newX) * 4;
-
-                            imageData.data[oldIndex] = tempData[newIndex];
-                            imageData.data[oldIndex + 1] = tempData[newIndex + 1];
-                            imageData.data[oldIndex + 2] = tempData[newIndex + 2];
-                        }
-                    }
-                }
-
-                this.ctx.putImageData(imageData, 0, 0);
-            }
-
-            zoomEffect() {
-                const imageData = this.ctx.getImageData(0, 0, this.gridSize, this.gridSize);
-                const tempData = new Uint8ClampedArray(imageData.data);
-                const centerX = this.gridSize / 2;
-                const centerY = this.gridSize / 2;
-                const zoom = 1 + Math.sin(this.time * 2) * 0.2;
-
-                for (let y = 0; y < this.gridSize; y++) {
-                    for (let x = 0; x < this.gridSize; x++) {
-                        const dx = x - centerX;
-                        const dy = y - centerY;
-
-                        const newX = Math.round(centerX + dx * zoom);
-                        const newY = Math.round(centerY + dy * zoom);
-
-                        if (newX >= 0 && newX < this.gridSize && newY >= 0 && newY < this.gridSize) {
-                            const oldIndex = (y * this.gridSize + x) * 4;
-                            const newIndex = (newY * this.gridSize + newX) * 4;
-
-                            imageData.data[oldIndex] = tempData[newIndex];
-                            imageData.data[oldIndex + 1] = tempData[newIndex + 1];
-                            imageData.data[oldIndex + 2] = tempData[newIndex + 2];
-                        }
-                    }
-                }
-
-                this.ctx.putImageData(imageData, 0, 0);
-            }
-
-            kaleidoscopeEffect() {
-                const imageData = this.ctx.getImageData(0, 0, this.gridSize, this.gridSize);
-                const tempData = new Uint8ClampedArray(imageData.data);
-                const centerX = this.gridSize / 2;
-                const centerY = this.gridSize / 2;
-                const segments = 6;
-
-                for (let y = 0; y < this.gridSize; y++) {
-                    for (let x = 0; x < this.gridSize; x++) {
-                        const dx = x - centerX;
-                        const dy = y - centerY;
-                        let angle = Math.atan2(dy, dx) + this.time;
-
-                        angle = ((angle % (Math.PI * 2 / segments)) + (Math.PI * 2 / segments)) % (Math.PI * 2 / segments);
-
-                        const distance = Math.sqrt(dx * dx + dy * dy);
-                        const newX = Math.round(centerX + Math.cos(angle) * distance);
-                        const newY = Math.round(centerY + Math.sin(angle) * distance);
-
-                        if (newX >= 0 && newX < this.gridSize && newY >= 0 && newY < this.gridSize) {
-                            const oldIndex = (y * this.gridSize + x) * 4;
-                            const newIndex = (newY * this.gridSize + newX) * 4;
-
-                            imageData.data[oldIndex] = tempData[newIndex];
-                            imageData.data[oldIndex + 1] = tempData[newIndex + 1];
-                            imageData.data[oldIndex + 2] = tempData[newIndex + 2];
-                        }
-                    }
-                }
-
-                this.ctx.putImageData(imageData, 0, 0);
-            }
-
-            pixelateEffect() {
-                const blockSize = Math.floor(4 + Math.sin(this.time * 2) * 2);
-                const imageData = this.ctx.getImageData(0, 0, this.gridSize, this.gridSize);
-
-                for (let y = 0; y < this.gridSize; y += blockSize) {
-                    for (let x = 0; x < this.gridSize; x += blockSize) {
-                        let r = 0, g = 0, b = 0, count = 0;
-
-                        for (let dy = 0; dy < blockSize && y + dy < this.gridSize; dy++) {
-                            for (let dx = 0; dx < blockSize && x + dx < this.gridSize; dx++) {
-                                const index = ((y + dy) * this.gridSize + (x + dx)) * 4;
-                                r += imageData.data[index];
-                                g += imageData.data[index + 1];
-                                b += imageData.data[index + 2];
-                                count++;
-                            }
-                        }
-
-                        r = Math.floor(r / count);
-                        g = Math.floor(g / count);
-                        b = Math.floor(b / count);
-
-                        for (let dy = 0; dy < blockSize && y + dy < this.gridSize; dy++) {
-                            for (let dx = 0; dx < blockSize && x + dx < this.gridSize; dx++) {
-                                const index = ((y + dy) * this.gridSize + (x + dx)) * 4;
-                                imageData.data[index] = r;
-                                imageData.data[index + 1] = g;
-                                imageData.data[index + 2] = b;
-                            }
-                        }
-                    }
-                }
-
-                this.ctx.putImageData(imageData, 0, 0);
-            }
-
-            chromaticEffect() {
-                const imageData = this.ctx.getImageData(0, 0, this.gridSize, this.gridSize);
-                const tempData = new Uint8ClampedArray(imageData.data);
-                const offset = Math.sin(this.time * 3) * 5;
-
-                for (let y = 0; y < this.gridSize; y++) {
-                    for (let x = 0; x < this.gridSize; x++) {
-                        const index = (y * this.gridSize + x) * 4;
-
-                        const rX = Math.round(x + offset);
-                        const bX = Math.round(x - offset);
-
-                        if (rX >= 0 && rX < this.gridSize) {
-                            const rIndex = (y * this.gridSize + rX) * 4;
-                            imageData.data[index] = tempData[rIndex];
-                        }
-
-                        if (bX >= 0 && bX < this.gridSize) {
-                            const bIndex = (y * this.gridSize + bX) * 4;
-                            imageData.data[index + 2] = tempData[bIndex + 2];
-                        }
-                    }
-                }
-
-                this.ctx.putImageData(imageData, 0, 0);
-            }
-        }
-
-        // Initialize the app
-        const app = new NoiseGridApp();
-    </script>
+    <footer>
+        <p>Built with vanilla HTML, CSS, and JavaScript</p>
+    </footer>
 </body>
 </html>
