@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Particle Flow Field</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0a0a0f;
+            color: #e0e0e0;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        #canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+        }
+
+        .controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+            background: rgba(15, 15, 25, 0.85);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 20px;
+            min-width: 280px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .controls.collapsed {
+            transform: translateX(-300px);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .toggle-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 11;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: rgba(15, 15, 25, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .toggle-btn:hover {
+            background: rgba(102, 126, 234, 0.3);
+            border-color: rgba(102, 126, 234, 0.5);
+        }
+
+        .toggle-btn:active {
+            transform: scale(0.95);
+        }
+
+        .controls.collapsed + .toggle-btn {
+            left: 20px;
+        }
+
+        .controls:not(.collapsed) + .toggle-btn {
+            left: 320px;
+        }
+
+        h1 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-group:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            color: #a0a0a0;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+        }
+
+        .value-display {
+            display: inline-block;
+            float: right;
+            font-size: 12px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        button {
+            padding: 10px 16px;
+            font-size: 13px;
+            font-weight: 500;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: rgba(102, 126, 234, 0.1);
+            color: #a0a0a0;
+        }
+
+        button.active,
+        button:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: transparent;
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        .color-modes {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .color-btn {
+            aspect-ratio: 1;
+            border-radius: 8px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .color-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 6px;
+        }
+
+        .color-btn.rainbow::before {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+        }
+
+        .color-btn.fire::before {
+            background: linear-gradient(135deg, #f97316 0%, #dc2626 50%, #7c2d12 100%);
+        }
+
+        .color-btn.ocean::before {
+            background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 50%, #1e3a8a 100%);
+        }
+
+        .color-btn.forest::before {
+            background: linear-gradient(135deg, #4ade80 0%, #22c55e 50%, #15803d 100%);
+        }
+
+        .color-btn.sunset::before {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #ea580c 100%);
+        }
+
+        .color-btn.monochrome::before {
+            background: linear-gradient(135deg, #ffffff 0%, #6b7280 50%, #1f2937 100%);
+        }
+
+        .color-btn.active {
+            border-color: white;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            transform: scale(1.05);
+        }
+
+        .info {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 16px;
+            background: rgba(15, 15, 25, 0.85);
+            backdrop-filter: blur(20px);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 13px;
+            color: #a0a0a0;
+            z-index: 10;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                min-width: 260px;
+                padding: 16px;
+                top: 10px;
+                left: 10px;
+            }
+
+            .toggle-btn {
+                top: 10px;
+                left: 10px;
+            }
+
+            .controls:not(.collapsed) + .toggle-btn {
+                left: 280px;
+            }
+
+            h1 {
+                font-size: 18px;
+                margin-bottom: 16px;
+            }
+
+            .info {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .controls {
+                min-width: calc(100vw - 40px);
+            }
+
+            .controls:not(.collapsed) + .toggle-btn {
+                left: calc(100vw - 30px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+
+    <div class="controls" id="controls">
+        <h1>Particle Flow Field</h1>
+
+        <div class="control-group">
+            <label>
+                Particles
+                <span class="value-display" id="particleValue">3000</span>
+            </label>
+            <input type="range" id="particleCount" min="500" max="8000" value="3000" step="100">
+        </div>
+
+        <div class="control-group">
+            <label>
+                Speed
+                <span class="value-display" id="speedValue">1.0</span>
+            </label>
+            <input type="range" id="speed" min="0.1" max="3" value="1" step="0.1">
+        </div>
+
+        <div class="control-group">
+            <label>
+                Trail Length
+                <span class="value-display" id="trailValue">30</span>
+            </label>
+            <input type="range" id="trailLength" min="5" max="100" value="30" step="5">
+        </div>
+
+        <div class="control-group">
+            <label>
+                Flow Complexity
+                <span class="value-display" id="noiseValue">0.003</span>
+            </label>
+            <input type="range" id="noiseScale" min="0.001" max="0.01" value="0.003" step="0.001">
+        </div>
+
+        <div class="control-group">
+            <label>Color Mode</label>
+            <div class="color-modes">
+                <div class="color-btn rainbow active" data-mode="rainbow"></div>
+                <div class="color-btn fire" data-mode="fire"></div>
+                <div class="color-btn ocean" data-mode="ocean"></div>
+                <div class="color-btn forest" data-mode="forest"></div>
+                <div class="color-btn sunset" data-mode="sunset"></div>
+                <div class="color-btn monochrome" data-mode="monochrome"></div>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <div class="button-group">
+                <button id="resetBtn">Reset</button>
+                <button id="clearBtn">Clear</button>
+            </div>
+        </div>
+    </div>
+
+    <button class="toggle-btn" id="toggleBtn">☰</button>
+
+    <div class="info">
+        Click or drag to interact
+    </div>
+
+    <script>
+        class ParticleFlowField {
+            constructor() {
+                this.canvas = document.getElementById('canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.particles = [];
+                this.mouse = { x: 0, y: 0, radius: 100, active: false };
+                this.settings = {
+                    particleCount: 3000,
+                    speed: 1,
+                    trailLength: 30,
+                    noiseScale: 0.003,
+                    colorMode: 'rainbow'
+                };
+                this.flowField = [];
+                this.flowFieldResolution = 20;
+                this.time = 0;
+
+                this.colorModes = {
+                    rainbow: [
+                        { r: 102, g: 126, b: 234 },
+                        { r: 118, g: 75, b: 162 },
+                        { r: 240, g: 147, b: 251 }
+                    ],
+                    fire: [
+                        { r: 249, g: 115, b: 22 },
+                        { r: 220, g: 38, b: 38 },
+                        { r: 124, g: 45, b: 18 }
+                    ],
+                    ocean: [
+                        { r: 6, g: 182, b: 212 },
+                        { r: 59, g: 130, b: 246 },
+                        { r: 30, g: 58, b: 138 }
+                    ],
+                    forest: [
+                        { r: 74, g: 222, b: 128 },
+                        { r: 34, g: 197, b: 94 },
+                        { r: 21, g: 128, b: 61 }
+                    ],
+                    sunset: [
+                        { r: 251, g: 191, b: 36 },
+                        { r: 245, g: 158, b: 11 },
+                        { r: 234, g: 88, b: 12 }
+                    ],
+                    monochrome: [
+                        { r: 255, g: 255, b: 255 },
+                        { r: 107, g: 114, b: 128 },
+                        { r: 31, g: 41, b: 55 }
+                    ]
+                };
+
+                this.init();
+            }
+
+            init() {
+                this.resize();
+                this.setupControls();
+                this.createParticles();
+                this.animate();
+
+                window.addEventListener('resize', () => this.resize());
+                this.canvas.addEventListener('mousemove', (e) => this.handleMouse(e));
+                this.canvas.addEventListener('mousedown', () => this.mouse.active = true);
+                this.canvas.addEventListener('mouseup', () => this.mouse.active = false);
+                this.canvas.addEventListener('mouseleave', () => this.mouse.active = false);
+
+                this.canvas.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                    this.handleTouch(e);
+                }, { passive: false });
+                this.canvas.addEventListener('touchstart', (e) => {
+                    this.mouse.active = true;
+                    this.handleTouch(e);
+                });
+                this.canvas.addEventListener('touchend', () => this.mouse.active = false);
+            }
+
+            resize() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+                this.generateFlowField();
+            }
+
+            handleMouse(e) {
+                this.mouse.x = e.clientX;
+                this.mouse.y = e.clientY;
+            }
+
+            handleTouch(e) {
+                if (e.touches.length > 0) {
+                    this.mouse.x = e.touches[0].clientX;
+                    this.mouse.y = e.touches[0].clientY;
+                }
+            }
+
+            setupControls() {
+                const particleInput = document.getElementById('particleCount');
+                const speedInput = document.getElementById('speed');
+                const trailInput = document.getElementById('trailLength');
+                const noiseInput = document.getElementById('noiseScale');
+                const resetBtn = document.getElementById('resetBtn');
+                const clearBtn = document.getElementById('clearBtn');
+                const toggleBtn = document.getElementById('toggleBtn');
+                const controls = document.getElementById('controls');
+
+                particleInput.addEventListener('input', (e) => {
+                    this.settings.particleCount = parseInt(e.target.value);
+                    document.getElementById('particleValue').textContent = e.target.value;
+                    this.createParticles();
+                });
+
+                speedInput.addEventListener('input', (e) => {
+                    this.settings.speed = parseFloat(e.target.value);
+                    document.getElementById('speedValue').textContent = e.target.value;
+                });
+
+                trailInput.addEventListener('input', (e) => {
+                    this.settings.trailLength = parseInt(e.target.value);
+                    document.getElementById('trailValue').textContent = e.target.value;
+                });
+
+                noiseInput.addEventListener('input', (e) => {
+                    this.settings.noiseScale = parseFloat(e.target.value);
+                    document.getElementById('noiseValue').textContent = e.target.value;
+                    this.generateFlowField();
+                });
+
+                resetBtn.addEventListener('click', () => this.createParticles());
+                clearBtn.addEventListener('click', () => {
+                    this.ctx.fillStyle = '#0a0a0f';
+                    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                });
+
+                toggleBtn.addEventListener('click', () => {
+                    controls.classList.toggle('collapsed');
+                    toggleBtn.textContent = controls.classList.contains('collapsed') ? '☰' : '✕';
+                });
+
+                document.querySelectorAll('.color-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        this.settings.colorMode = btn.dataset.mode;
+                    });
+                });
+            }
+
+            generateFlowField() {
+                this.flowField = [];
+                const cols = Math.ceil(this.canvas.width / this.flowFieldResolution);
+                const rows = Math.ceil(this.canvas.height / this.flowFieldResolution);
+
+                for (let y = 0; y < rows; y++) {
+                    for (let x = 0; x < cols; x++) {
+                        const angle = this.noise(x * 100, y * 100, this.time) * Math.PI * 2;
+                        this.flowField.push(angle);
+                    }
+                }
+            }
+
+            // Simple noise function
+            noise(x, y, z) {
+                const X = Math.floor(x * this.settings.noiseScale) & 255;
+                const Y = Math.floor(y * this.settings.noiseScale) & 255;
+                const Z = Math.floor(z * 0.001) & 255;
+
+                x = (x * this.settings.noiseScale) - Math.floor(x * this.settings.noiseScale);
+                y = (y * this.settings.noiseScale) - Math.floor(y * this.settings.noiseScale);
+
+                const u = this.fade(x);
+                const v = this.fade(y);
+
+                const A = (this.p[X] + Y) & 255;
+                const B = (this.p[X + 1] + Y) & 255;
+
+                return this.lerp(v,
+                    this.lerp(u, this.grad(this.p[A] + Z, x, y), this.grad(this.p[B] + Z, x - 1, y)),
+                    this.lerp(u, this.grad(this.p[A + 1] + Z, x, y - 1), this.grad(this.p[B + 1] + Z, x - 1, y - 1))
+                );
+            }
+
+            fade(t) {
+                return t * t * t * (t * (t * 6 - 15) + 10);
+            }
+
+            lerp(t, a, b) {
+                return a + t * (b - a);
+            }
+
+            grad(hash, x, y) {
+                const h = hash & 3;
+                const u = h < 2 ? x : y;
+                const v = h < 2 ? y : x;
+                return ((h & 1) ? -u : u) + ((h & 2) ? -2.0 * v : 2.0 * v);
+            }
+
+            // Permutation table for noise
+            p = [151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,190,6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,88,237,149,56,87,174,20,125,136,171,168,68,175,74,165,71,134,139,48,27,166,77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,102,143,54,65,25,63,161,1,216,80,73,209,76,132,187,208,89,18,169,200,196,135,130,116,188,159,86,164,100,109,198,173,186,3,64,52,217,226,250,124,123,5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,223,183,170,213,119,248,152,2,44,154,163,70,221,153,101,155,167,43,172,9,129,22,39,253,19,98,108,110,79,113,224,232,178,185,112,104,218,246,97,228,251,34,242,193,238,210,144,12,191,179,162,241,81,51,145,235,249,14,239,107,49,192,214,31,181,199,106,157,184,84,204,176,115,121,50,45,127,4,150,254,138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180];
+
+            createParticles() {
+                this.particles = [];
+                const colors = this.colorModes[this.settings.colorMode];
+
+                for (let i = 0; i < this.settings.particleCount; i++) {
+                    const colorIndex = Math.floor(Math.random() * colors.length);
+                    const color = colors[colorIndex];
+
+                    this.particles.push({
+                        x: Math.random() * this.canvas.width,
+                        y: Math.random() * this.canvas.height,
+                        vx: 0,
+                        vy: 0,
+                        color: `rgba(${color.r}, ${color.g}, ${color.b}, 0.5)`,
+                        history: []
+                    });
+                }
+            }
+
+            update() {
+                this.time++;
+
+                if (this.time % 10 === 0) {
+                    this.generateFlowField();
+                }
+
+                this.particles.forEach(particle => {
+                    // Get flow field angle
+                    const x = Math.floor(particle.x / this.flowFieldResolution);
+                    const y = Math.floor(particle.y / this.flowFieldResolution);
+                    const cols = Math.ceil(this.canvas.width / this.flowFieldResolution);
+                    const index = x + y * cols;
+                    const angle = this.flowField[index] || 0;
+
+                    // Mouse interaction
+                    if (this.mouse.active) {
+                        const dx = this.mouse.x - particle.x;
+                        const dy = this.mouse.y - particle.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+
+                        if (distance < this.mouse.radius) {
+                            const force = (this.mouse.radius - distance) / this.mouse.radius;
+                            particle.vx += (dx / distance) * force * 0.5;
+                            particle.vy += (dy / distance) * force * 0.5;
+                        }
+                    }
+
+                    // Apply flow field force
+                    particle.vx += Math.cos(angle) * 0.1 * this.settings.speed;
+                    particle.vy += Math.sin(angle) * 0.1 * this.settings.speed;
+
+                    // Damping
+                    particle.vx *= 0.95;
+                    particle.vy *= 0.95;
+
+                    // Update position
+                    particle.x += particle.vx;
+                    particle.y += particle.vy;
+
+                    // Wrap around edges
+                    if (particle.x < 0) particle.x = this.canvas.width;
+                    if (particle.x > this.canvas.width) particle.x = 0;
+                    if (particle.y < 0) particle.y = this.canvas.height;
+                    if (particle.y > this.canvas.height) particle.y = 0;
+
+                    // Store history for trails
+                    particle.history.push({ x: particle.x, y: particle.y });
+                    if (particle.history.length > this.settings.trailLength) {
+                        particle.history.shift();
+                    }
+                });
+            }
+
+            draw() {
+                // Fade effect for trails
+                this.ctx.fillStyle = `rgba(10, 10, 15, ${1 / this.settings.trailLength})`;
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                this.particles.forEach(particle => {
+                    if (particle.history.length > 1) {
+                        this.ctx.strokeStyle = particle.color;
+                        this.ctx.lineWidth = 1.5;
+                        this.ctx.lineCap = 'round';
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(particle.history[0].x, particle.history[0].y);
+
+                        for (let i = 1; i < particle.history.length; i++) {
+                            this.ctx.lineTo(particle.history[i].x, particle.history[i].y);
+                        }
+
+                        this.ctx.stroke();
+                    }
+
+                    // Draw particle
+                    this.ctx.fillStyle = particle.color;
+                    this.ctx.beginPath();
+                    this.ctx.arc(particle.x, particle.y, 1.5, 0, Math.PI * 2);
+                    this.ctx.fill();
+                });
+            }
+
+            animate() {
+                this.update();
+                this.draw();
+                requestAnimationFrame(() => this.animate());
+            }
+        }
+
+        // Initialize
+        const flowField = new ParticleFlowField();
+    </script>
+</body>
+</html>
