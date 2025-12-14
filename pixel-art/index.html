@@ -521,6 +521,7 @@
                 this.previewMode = false;
                 this.currentColor = '#000000';
                 this.controlsVisible = true;
+                this.shouldEnterPreviewMode = false;
 
                 this.strokes = [];
                 this.currentStroke = null;
@@ -543,6 +544,10 @@
                 this.renderColorPalette();
                 this.updateCurrentColor();
                 this.render();
+
+                if (this.shouldEnterPreviewMode) {
+                    this.enterPreviewMode();
+                }
             }
 
             loadFromURL() {
@@ -608,7 +613,7 @@
                     }
 
                     if (this.pixelArtData.length > 0) {
-                        this.enterPreviewMode();
+                        this.shouldEnterPreviewMode = true;
                     }
                 } catch (e) {
                     console.error('Failed to decode pixel art:', e);
