@@ -168,6 +168,45 @@
             color: #667eea;
         }
 
+        .source-image-container {
+            background: #f8f8f8;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .source-image-container h3 {
+            font-size: 14px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        #sourceImage {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            display: none;
+        }
+
+        #sourceImageTitle {
+            font-size: 14px;
+            color: #333;
+            margin-top: 8px;
+            font-weight: 600;
+        }
+
+        #sourceImageTitle a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        #sourceImageTitle a:hover {
+            text-decoration: underline;
+        }
+
         .leaderboard {
             background: #f8f8f8;
             border-radius: 12px;
@@ -259,6 +298,12 @@
         </header>
 
         <div class="game-container">
+            <div class="source-image-container">
+                <h3>Source Image</h3>
+                <img id="sourceImage" alt="Source image">
+                <div id="sourceImageTitle"></div>
+            </div>
+
             <div class="canvas-wrapper" id="canvasWrapper">
                 <canvas id="gameCanvas"></canvas>
             </div>
@@ -303,7 +348,7 @@
                 this.ctx = this.canvas.getContext('2d');
                 this.gridSize = 40;
                 this.cellSize = 10;
-                this.maxColors = 256;
+                this.maxColors = 512;
 
                 this.grid = [];
                 this.colorGroups = new Map();
@@ -376,6 +421,11 @@
                         return;
                     }
 
+                    // Store page info
+                    this.pageTitle = data.title;
+                    this.pageUrl = data.content_urls?.desktop?.page || `https://en.wikipedia.org/wiki/${encodeURIComponent(data.title)}`;
+                    this.sourceImageUrl = imageUrl;
+
                     // Load and process the image
                     await this.processImage(imageUrl);
 
@@ -395,6 +445,13 @@
                         this.imageToGrid(img);
                         this.render();
                         this.updateUI();
+
+                        // Display source image
+                        const sourceImg = document.getElementById('sourceImage');
+                        const sourceTitle = document.getElementById('sourceImageTitle');
+                        sourceImg.src = this.sourceImageUrl;
+                        sourceImg.style.display = 'block';
+                        sourceTitle.innerHTML = `<a href="${this.pageUrl}" target="_blank">${this.pageTitle}</a>`;
 
                         document.getElementById('startBtn').disabled = false;
                         document.getElementById('resetBtn').disabled = false;
