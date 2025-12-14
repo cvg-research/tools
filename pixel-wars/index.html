@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Pixel Wars</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 36px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff 0%, #f0f0f0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .canvas-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #f5f5f5;
+            border-radius: 12px;
+            padding: 20px;
+            min-height: 400px;
+        }
+
+        #gameCanvas {
+            border: 2px solid #333;
+            border-radius: 4px;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        button.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        button.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+        }
+
+        button.secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        button.secondary:hover {
+            background: #e0e0e0;
+        }
+
+        button.success {
+            background: #4CAF50;
+            color: white;
+        }
+
+        button.success:hover {
+            background: #45a049;
+        }
+
+        button.danger {
+            background: #f44336;
+            color: white;
+        }
+
+        button.danger:hover {
+            background: #d32f2f;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        button:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+
+        .stats {
+            background: #f8f8f8;
+            border-radius: 12px;
+            padding: 16px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .leaderboard {
+            background: #f8f8f8;
+            border-radius: 12px;
+            padding: 16px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .leaderboard h3 {
+            font-size: 14px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .leader-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px;
+            background: white;
+            border-radius: 6px;
+            margin-bottom: 6px;
+        }
+
+        .leader-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            border: 2px solid #333;
+        }
+
+        .leader-info {
+            flex: 1;
+        }
+
+        .leader-rank {
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .leader-territory {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 28px;
+            }
+
+            .game-container {
+                padding: 16px;
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Pixel Wars</h1>
+            <p class="subtitle">Territory conquest through color domination</p>
+        </header>
+
+        <div class="game-container">
+            <div class="canvas-wrapper" id="canvasWrapper">
+                <canvas id="gameCanvas"></canvas>
+            </div>
+
+            <div class="controls">
+                <button class="primary" id="newImageBtn">New Image</button>
+                <button class="success" id="startBtn" disabled>Start War</button>
+                <button class="secondary" id="pauseBtn" disabled>Pause</button>
+                <button class="danger" id="resetBtn" disabled>Reset</button>
+            </div>
+
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-label">Turn</div>
+                    <div class="stat-value" id="turnCount">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Territories</div>
+                    <div class="stat-value" id="territoryCount">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Battles</div>
+                    <div class="stat-value" id="battleCount">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Speed</div>
+                    <div class="stat-value" id="speedValue">1x</div>
+                </div>
+            </div>
+
+            <div class="leaderboard">
+                <h3>Territory Leaderboard</h3>
+                <div id="leaderboardContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class PixelWars {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.gridSize = 40;
+                this.cellSize = 10;
+                this.maxColors = 32;
+
+                this.grid = [];
+                this.colorGroups = new Map();
+                this.defendedThisTurn = new Set();
+                this.running = false;
+                this.turn = 0;
+                this.battles = 0;
+                this.speed = 1;
+                this.animationFrame = null;
+                this.lastUpdate = 0;
+
+                this.init();
+            }
+
+            init() {
+                this.setupCanvas();
+                this.setupEventListeners();
+                this.showLoading('Click "New Image" to start');
+            }
+
+            setupCanvas() {
+                this.canvas.width = this.gridSize * this.cellSize;
+                this.canvas.height = this.gridSize * this.cellSize;
+            }
+
+            setupEventListeners() {
+                document.getElementById('newImageBtn').addEventListener('click', () => this.loadRandomImage());
+                document.getElementById('startBtn').addEventListener('click', () => this.start());
+                document.getElementById('pauseBtn').addEventListener('click', () => this.pause());
+                document.getElementById('resetBtn').addEventListener('click', () => this.reset());
+
+                // Speed control - click speed value to cycle
+                document.getElementById('speedValue').addEventListener('click', () => {
+                    this.speed = this.speed === 1 ? 2 : this.speed === 2 ? 4 : 1;
+                    document.getElementById('speedValue').textContent = this.speed + 'x';
+                });
+            }
+
+            showLoading(message) {
+                const wrapper = document.getElementById('canvasWrapper');
+                wrapper.innerHTML = `
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <div>${message}</div>
+                    </div>
+                `;
+            }
+
+            hideLoading() {
+                const wrapper = document.getElementById('canvasWrapper');
+                wrapper.innerHTML = '<canvas id="gameCanvas"></canvas>';
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.setupCanvas();
+            }
+
+            async loadRandomImage() {
+                this.showLoading('Fetching random Wikipedia image...');
+
+                try {
+                    // Get random Wikipedia page with image
+                    const response = await fetch('https://en.wikipedia.org/api/rest_v1/page/random/summary');
+                    const data = await response.json();
+
+                    let imageUrl = data.thumbnail?.source || data.originalimage?.source;
+
+                    // If no image, try again
+                    if (!imageUrl) {
+                        this.loadRandomImage();
+                        return;
+                    }
+
+                    // Load and process the image
+                    await this.processImage(imageUrl);
+
+                } catch (error) {
+                    console.error('Error loading image:', error);
+                    this.showLoading('Error loading image. Click "New Image" to retry.');
+                }
+            }
+
+            async processImage(url) {
+                return new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.crossOrigin = 'anonymous';
+
+                    img.onload = () => {
+                        this.hideLoading();
+                        this.imageToGrid(img);
+                        this.render();
+                        this.updateUI();
+
+                        document.getElementById('startBtn').disabled = false;
+                        document.getElementById('resetBtn').disabled = false;
+
+                        resolve();
+                    };
+
+                    img.onerror = () => {
+                        // Try loading through a proxy if CORS fails
+                        this.loadRandomImage();
+                        reject();
+                    };
+
+                    img.src = url;
+                });
+            }
+
+            imageToGrid(img) {
+                // Create temporary canvas to process image
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = this.gridSize;
+                tempCanvas.height = this.gridSize;
+                const tempCtx = tempCanvas.getContext('2d');
+
+                // Draw scaled image
+                tempCtx.drawImage(img, 0, 0, this.gridSize, this.gridSize);
+
+                // Get pixel data
+                const imageData = tempCtx.getImageData(0, 0, this.gridSize, this.gridSize);
+                const pixels = imageData.data;
+
+                // Extract colors and quantize
+                const colors = [];
+                for (let i = 0; i < pixels.length; i += 4) {
+                    colors.push({
+                        r: pixels[i],
+                        g: pixels[i + 1],
+                        b: pixels[i + 2]
+                    });
+                }
+
+                const palette = this.quantizeColors(colors, this.maxColors);
+
+                // Build grid with quantized colors
+                this.grid = [];
+                for (let y = 0; y < this.gridSize; y++) {
+                    this.grid[y] = [];
+                    for (let x = 0; x < this.gridSize; x++) {
+                        const idx = (y * this.gridSize + x) * 4;
+                        const color = {
+                            r: pixels[idx],
+                            g: pixels[idx + 1],
+                            b: pixels[idx + 2]
+                        };
+                        this.grid[y][x] = this.findClosestColor(color, palette);
+                    }
+                }
+
+                this.turn = 0;
+                this.battles = 0;
+                this.calculateGroups();
+            }
+
+            quantizeColors(colors, maxColors) {
+                // Simple color quantization using median cut
+                if (colors.length <= maxColors) {
+                    return colors;
+                }
+
+                // Start with all colors in one bucket
+                let buckets = [colors];
+
+                while (buckets.length < maxColors) {
+                    // Find bucket with largest range
+                    let maxRange = -1;
+                    let maxBucketIdx = 0;
+                    let maxChannel = 'r';
+
+                    buckets.forEach((bucket, idx) => {
+                        const ranges = this.getColorRanges(bucket);
+                        ['r', 'g', 'b'].forEach(channel => {
+                            if (ranges[channel] > maxRange) {
+                                maxRange = ranges[channel];
+                                maxBucketIdx = idx;
+                                maxChannel = channel;
+                            }
+                        });
+                    });
+
+                    // Split the bucket
+                    const bucket = buckets[maxBucketIdx];
+                    bucket.sort((a, b) => a[maxChannel] - b[maxChannel]);
+                    const mid = Math.floor(bucket.length / 2);
+
+                    buckets.splice(maxBucketIdx, 1, bucket.slice(0, mid), bucket.slice(mid));
+                }
+
+                // Get average color from each bucket
+                return buckets.map(bucket => {
+                    const avg = { r: 0, g: 0, b: 0 };
+                    bucket.forEach(color => {
+                        avg.r += color.r;
+                        avg.g += color.g;
+                        avg.b += color.b;
+                    });
+                    return {
+                        r: Math.round(avg.r / bucket.length),
+                        g: Math.round(avg.g / bucket.length),
+                        b: Math.round(avg.b / bucket.length)
+                    };
+                });
+            }
+
+            getColorRanges(colors) {
+                const ranges = { r: [255, 0], g: [255, 0], b: [255, 0] };
+
+                colors.forEach(color => {
+                    ranges.r[0] = Math.min(ranges.r[0], color.r);
+                    ranges.r[1] = Math.max(ranges.r[1], color.r);
+                    ranges.g[0] = Math.min(ranges.g[0], color.g);
+                    ranges.g[1] = Math.max(ranges.g[1], color.g);
+                    ranges.b[0] = Math.min(ranges.b[0], color.b);
+                    ranges.b[1] = Math.max(ranges.b[1], color.b);
+                });
+
+                return {
+                    r: ranges.r[1] - ranges.r[0],
+                    g: ranges.g[1] - ranges.g[0],
+                    b: ranges.b[1] - ranges.b[0]
+                };
+            }
+
+            findClosestColor(color, palette) {
+                let minDist = Infinity;
+                let closest = palette[0];
+
+                palette.forEach(pColor => {
+                    const dist = Math.sqrt(
+                        Math.pow(color.r - pColor.r, 2) +
+                        Math.pow(color.g - pColor.g, 2) +
+                        Math.pow(color.b - pColor.b, 2)
+                    );
+                    if (dist < minDist) {
+                        minDist = dist;
+                        closest = pColor;
+                    }
+                });
+
+                return closest;
+            }
+
+            colorToString(color) {
+                return `rgb(${color.r}, ${color.g}, ${color.b})`;
+            }
+
+            colorsEqual(c1, c2) {
+                return c1.r === c2.r && c1.g === c2.g && c1.b === c2.b;
+            }
+
+            calculateGroups() {
+                this.colorGroups = new Map();
+                const visited = new Set();
+
+                for (let y = 0; y < this.gridSize; y++) {
+                    for (let x = 0; x < this.gridSize; x++) {
+                        const key = `${x},${y}`;
+                        if (visited.has(key)) continue;
+
+                        const color = this.grid[y][x];
+                        const group = this.floodFill(x, y, color, visited);
+
+                        const colorKey = this.colorToString(color);
+                        if (!this.colorGroups.has(colorKey)) {
+                            this.colorGroups.set(colorKey, []);
+                        }
+                        this.colorGroups.get(colorKey).push(group);
+                    }
+                }
+            }
+
+            floodFill(startX, startY, color, visited) {
+                const group = [];
+                const stack = [[startX, startY]];
+
+                while (stack.length > 0) {
+                    const [x, y] = stack.pop();
+                    const key = `${x},${y}`;
+
+                    if (visited.has(key)) continue;
+                    if (x < 0 || x >= this.gridSize || y < 0 || y >= this.gridSize) continue;
+                    if (!this.colorsEqual(this.grid[y][x], color)) continue;
+
+                    visited.add(key);
+                    group.push({ x, y });
+
+                    stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
+                }
+
+                return group;
+            }
+
+            getGroupSize(x, y) {
+                const color = this.grid[y][x];
+                const colorKey = this.colorToString(color);
+                const groups = this.colorGroups.get(colorKey) || [];
+
+                for (const group of groups) {
+                    if (group.some(cell => cell.x === x && cell.y === y)) {
+                        return group.length;
+                    }
+                }
+
+                return 1;
+            }
+
+            getNeighbors(x, y) {
+                const neighbors = [];
+                const directions = [[0, 1], [1, 0], [0, -1], [-1, 0]];
+
+                directions.forEach(([dx, dy]) => {
+                    const nx = x + dx;
+                    const ny = y + dy;
+                    if (nx >= 0 && nx < this.gridSize && ny >= 0 && ny < this.gridSize) {
+                        neighbors.push({ x: nx, y: ny });
+                    }
+                });
+
+                return neighbors;
+            }
+
+            simulateStep() {
+                this.defendedThisTurn = new Set();
+                const attacks = [];
+
+                // Each pixel attempts to attack a neighbor
+                for (let y = 0; y < this.gridSize; y++) {
+                    for (let x = 0; x < this.gridSize; x++) {
+                        const neighbors = this.getNeighbors(x, y);
+                        const differentNeighbors = neighbors.filter(n =>
+                            !this.colorsEqual(this.grid[y][x], this.grid[n.y][n.x])
+                        );
+
+                        if (differentNeighbors.length > 0) {
+                            const target = differentNeighbors[Math.floor(Math.random() * differentNeighbors.length)];
+                            attacks.push({
+                                attacker: { x, y, color: this.grid[y][x] },
+                                defender: { x: target.x, y: target.y, color: this.grid[target.y][target.x] }
+                            });
+                        }
+                    }
+                }
+
+                // Resolve attacks
+                attacks.forEach(attack => {
+                    const defenderKey = `${attack.defender.x},${attack.defender.y}`;
+
+                    // Skip if defender already defended this turn
+                    if (this.defendedThisTurn.has(defenderKey)) return;
+
+                    const attackerGroupSize = this.getGroupSize(attack.attacker.x, attack.attacker.y);
+
+                    // Attack strength based on group size (capped at 100 pixels for 90% success)
+                    const baseChance = 0.3;
+                    const groupBonus = Math.min(attackerGroupSize / 100, 0.6);
+                    const successChance = baseChance + groupBonus;
+
+                    if (Math.random() < successChance) {
+                        this.grid[attack.defender.y][attack.defender.x] = attack.attacker.color;
+                        this.battles++;
+                    }
+
+                    this.defendedThisTurn.add(defenderKey);
+                });
+
+                this.turn++;
+                this.calculateGroups();
+            }
+
+            start() {
+                this.running = true;
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('pauseBtn').disabled = false;
+                this.animate();
+            }
+
+            pause() {
+                this.running = false;
+                document.getElementById('startBtn').disabled = false;
+                document.getElementById('pauseBtn').disabled = true;
+                if (this.animationFrame) {
+                    cancelAnimationFrame(this.animationFrame);
+                }
+            }
+
+            reset() {
+                this.pause();
+                this.loadRandomImage();
+            }
+
+            animate(timestamp = 0) {
+                if (!this.running) return;
+
+                const interval = 100 / this.speed; // Base 100ms, faster with speed multiplier
+
+                if (timestamp - this.lastUpdate > interval) {
+                    this.simulateStep();
+                    this.render();
+                    this.updateUI();
+                    this.lastUpdate = timestamp;
+                }
+
+                this.animationFrame = requestAnimationFrame((t) => this.animate(t));
+            }
+
+            render() {
+                for (let y = 0; y < this.gridSize; y++) {
+                    for (let x = 0; x < this.gridSize; x++) {
+                        const color = this.grid[y][x];
+                        this.ctx.fillStyle = this.colorToString(color);
+                        this.ctx.fillRect(
+                            x * this.cellSize,
+                            y * this.cellSize,
+                            this.cellSize,
+                            this.cellSize
+                        );
+                    }
+                }
+            }
+
+            updateUI() {
+                document.getElementById('turnCount').textContent = this.turn;
+                document.getElementById('battleCount').textContent = this.battles;
+                document.getElementById('territoryCount').textContent = this.colorGroups.size;
+
+                // Update leaderboard
+                const territories = Array.from(this.colorGroups.entries()).map(([color, groups]) => ({
+                    color,
+                    size: groups.reduce((sum, group) => sum + group.length, 0)
+                }));
+
+                territories.sort((a, b) => b.size - a.size);
+
+                const leaderboard = document.getElementById('leaderboardContent');
+                leaderboard.innerHTML = territories.slice(0, 10).map((territory, idx) => `
+                    <div class="leader-item">
+                        <div class="leader-color" style="background: ${territory.color}"></div>
+                        <div class="leader-info">
+                            <div class="leader-rank">#${idx + 1}</div>
+                            <div class="leader-territory">${territory.size} pixels (${Math.round(territory.size / (this.gridSize * this.gridSize) * 100)}%)</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        const game = new PixelWars();
+    </script>
+</body>
+</html>
