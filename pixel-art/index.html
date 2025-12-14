@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Pixel Art Canvas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .canvas-container {
+            background: #F5F5F0;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 300px;
+            position: relative;
+        }
+
+        #drawingCanvas {
+            display: block;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            cursor: crosshair;
+            touch-action: none;
+        }
+
+        #drawingCanvas.draw-mode-off {
+            cursor: not-allowed;
+        }
+
+        .controls {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .control-section {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .control-section:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .control-section h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .draw-mode-toggle {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: #f8f8f8;
+            border-radius: 8px;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s;
+        }
+
+        .draw-mode-toggle:hover {
+            background: #f0f0f0;
+        }
+
+        .draw-mode-toggle.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+            background: #ccc;
+            border-radius: 13px;
+            transition: background 0.2s;
+        }
+
+        .draw-mode-toggle.active .toggle-switch {
+            background: #4CAF50;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.2s;
+        }
+
+        .draw-mode-toggle.active .toggle-switch::after {
+            transform: translateX(24px);
+        }
+
+        .size-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .size-control {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .size-control label {
+            min-width: 60px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .size-control input[type="range"] {
+            flex: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: #e0e0e0;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .size-control input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        .size-control input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+        }
+
+        .size-control .value {
+            min-width: 40px;
+            text-align: right;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .checkbox-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            user-select: none;
+            padding: 8px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        .checkbox-control:hover {
+            background: #f8f8f8;
+        }
+
+        .checkbox-control input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .color-palette {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+            gap: 8px;
+        }
+
+        .color-swatch {
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 3px solid transparent;
+            position: relative;
+        }
+
+        .color-swatch:hover {
+            transform: scale(1.1);
+        }
+
+        .color-swatch.selected {
+            border-color: #333;
+            transform: scale(1.15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .color-swatch.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 20px;
+            color: white;
+            text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+        }
+
+        .current-color {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: #f8f8f8;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .current-color-box {
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            border: 2px solid #333;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        button {
+            padding: 14px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        button.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        button.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+        }
+
+        button.secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        button.secondary:hover {
+            background: #e0e0e0;
+        }
+
+        button.danger {
+            background: #f44336;
+            color: white;
+        }
+
+        button.danger:hover {
+            background: #d32f2f;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        button:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .export-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .export-modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .export-modal-content h2 {
+            margin-bottom: 16px;
+            font-size: 20px;
+        }
+
+        .export-modal-content p {
+            margin-bottom: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        @media (min-width: 768px) {
+            .button-group {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .color-palette {
+                grid-template-columns: repeat(8, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="canvas-container">
+            <canvas id="drawingCanvas"></canvas>
+        </div>
+
+        <div class="controls">
+            <div class="control-section" id="drawModeSection">
+                <h3>Draw Mode</h3>
+                <div class="draw-mode-toggle" id="drawModeToggle">
+                    <div class="toggle-switch"></div>
+                    <span id="drawModeLabel">OFF - Click to Enable</span>
+                </div>
+            </div>
+
+            <div class="control-section" id="sizeSection">
+                <h3>Canvas Size</h3>
+                <div class="size-controls">
+                    <div class="size-control">
+                        <label>Width:</label>
+                        <input type="range" id="widthSlider" min="0" max="7" value="3" step="1">
+                        <span class="value" id="widthValue">64</span>
+                    </div>
+                    <div class="size-control">
+                        <label>Height:</label>
+                        <input type="range" id="heightSlider" min="0" max="7" value="3" step="1">
+                        <span class="value" id="heightValue">64</span>
+                    </div>
+                    <label class="checkbox-control">
+                        <input type="checkbox" id="aspectLock" checked>
+                        <span>Lock Aspect Ratio</span>
+                    </label>
+                    <label class="checkbox-control">
+                        <input type="checkbox" id="gridToggle" checked>
+                        <span>Show Grid</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="control-section" id="colorSection">
+                <h3>Color</h3>
+                <div class="current-color">
+                    <div class="current-color-box" id="currentColorBox"></div>
+                    <span>Current Color</span>
+                </div>
+                <div class="color-palette" id="colorPalette"></div>
+            </div>
+
+            <div class="control-section">
+                <h3>Actions</h3>
+                <div class="button-group">
+                    <button class="danger" id="clearBtn">Clear</button>
+                    <button class="primary" id="convertBtn">Convert</button>
+                </div>
+            </div>
+
+            <div class="control-section hidden" id="previewActions">
+                <h3>Preview Actions</h3>
+                <div class="button-group">
+                    <button class="secondary" id="backBtn">Back to Draw</button>
+                    <button class="primary" id="exportBtn">Export</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="exportModal" class="export-modal hidden">
+        <div class="export-modal-content">
+            <h2>Export Pixel Art</h2>
+            <p>Choose background type:</p>
+            <div class="button-group">
+                <button class="secondary" id="exportSolidBtn">Solid Background</button>
+                <button class="primary" id="exportTransparentBtn">Transparent</button>
+            </div>
+            <br>
+            <button class="secondary" id="cancelExportBtn" style="width: 100%;">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        class PixelArtCanvas {
+            constructor() {
+                this.canvas = document.getElementById('drawingCanvas');
+                this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
+
+                // Size options
+                this.sizeOptions = [24, 36, 48, 64, 96, 128, 192, 256];
+                this.gridWidth = 64;
+                this.gridHeight = 64;
+                this.cellSize = 8; // pixels per cell for display
+
+                // State
+                this.drawMode = false;
+                this.isDrawing = false;
+                this.showGrid = true;
+                this.aspectLocked = true;
+                this.previewMode = false;
+                this.currentColor = '#000000';
+
+                // Drawing data
+                this.strokes = [];
+                this.currentStroke = null;
+                this.pixelArtData = null;
+
+                // Colors
+                this.colors = [
+                    '#000000', '#FFFFFF', '#FF0000', '#8B0000',
+                    '#FFA500', '#FFFF00', '#00FF00', '#006400',
+                    '#00FFFF', '#0000FF', '#00008B', '#800080',
+                    '#FF00FF', '#FFC0CB', '#8B4513', '#808080'
+                ];
+
+                this.init();
+            }
+
+            init() {
+                this.setupCanvas();
+                this.setupEventListeners();
+                this.renderColorPalette();
+                this.updateCurrentColor();
+                this.render();
+            }
+
+            setupCanvas() {
+                const maxWidth = Math.min(window.innerWidth - 60, 800);
+                const maxHeight = Math.min(window.innerHeight - 400, 600);
+
+                const cellWidth = Math.floor(maxWidth / this.gridWidth);
+                const cellHeight = Math.floor(maxHeight / this.gridHeight);
+                this.cellSize = Math.max(3, Math.min(cellWidth, cellHeight, 12));
+
+                this.canvas.width = this.gridWidth * this.cellSize;
+                this.canvas.height = this.gridHeight * this.cellSize;
+
+                this.render();
+            }
+
+            setupEventListeners() {
+                // Draw mode toggle
+                document.getElementById('drawModeToggle').addEventListener('click', () => {
+                    this.toggleDrawMode();
+                });
+
+                // Canvas drawing
+                this.canvas.addEventListener('mousedown', (e) => this.startDrawing(e));
+                this.canvas.addEventListener('mousemove', (e) => this.draw(e));
+                this.canvas.addEventListener('mouseup', () => this.stopDrawing());
+                this.canvas.addEventListener('mouseleave', () => this.stopDrawing());
+
+                this.canvas.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    this.startDrawing(e.touches[0]);
+                });
+                this.canvas.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                    this.draw(e.touches[0]);
+                });
+                this.canvas.addEventListener('touchend', () => this.stopDrawing());
+
+                // Size controls
+                document.getElementById('widthSlider').addEventListener('input', (e) => {
+                    this.updateWidth(e.target.value);
+                });
+                document.getElementById('heightSlider').addEventListener('input', (e) => {
+                    this.updateHeight(e.target.value);
+                });
+                document.getElementById('aspectLock').addEventListener('change', (e) => {
+                    this.aspectLocked = e.target.checked;
+                });
+                document.getElementById('gridToggle').addEventListener('change', (e) => {
+                    this.showGrid = e.target.checked;
+                    this.render();
+                });
+
+                // Action buttons
+                document.getElementById('clearBtn').addEventListener('click', () => this.clearCanvas());
+                document.getElementById('convertBtn').addEventListener('click', () => this.convertToPixelArt());
+                document.getElementById('backBtn').addEventListener('click', () => this.backToDrawing());
+                document.getElementById('exportBtn').addEventListener('click', () => this.showExportModal());
+
+                // Export modal
+                document.getElementById('exportSolidBtn').addEventListener('click', () => this.exportImage(false));
+                document.getElementById('exportTransparentBtn').addEventListener('click', () => this.exportImage(true));
+                document.getElementById('cancelExportBtn').addEventListener('click', () => this.hideExportModal());
+
+                // Resize
+                window.addEventListener('resize', () => this.setupCanvas());
+            }
+
+            renderColorPalette() {
+                const palette = document.getElementById('colorPalette');
+                palette.innerHTML = '';
+
+                this.colors.forEach(color => {
+                    const swatch = document.createElement('div');
+                    swatch.className = 'color-swatch';
+                    swatch.style.backgroundColor = color;
+                    if (color === this.currentColor) {
+                        swatch.classList.add('selected');
+                    }
+                    swatch.addEventListener('click', () => this.selectColor(color));
+                    palette.appendChild(swatch);
+                });
+            }
+
+            selectColor(color) {
+                this.currentColor = color;
+                this.renderColorPalette();
+                this.updateCurrentColor();
+            }
+
+            updateCurrentColor() {
+                document.getElementById('currentColorBox').style.backgroundColor = this.currentColor;
+            }
+
+            toggleDrawMode() {
+                this.drawMode = !this.drawMode;
+                const toggle = document.getElementById('drawModeToggle');
+                const label = document.getElementById('drawModeLabel');
+
+                if (this.drawMode) {
+                    toggle.classList.add('active');
+                    label.textContent = 'ON - Drawing Enabled';
+                    this.canvas.classList.remove('draw-mode-off');
+                } else {
+                    toggle.classList.remove('active');
+                    label.textContent = 'OFF - Click to Enable';
+                    this.canvas.classList.add('draw-mode-off');
+                }
+            }
+
+            updateWidth(index) {
+                const oldWidth = this.gridWidth;
+                this.gridWidth = this.sizeOptions[index];
+                document.getElementById('widthValue').textContent = this.gridWidth;
+
+                if (this.aspectLocked) {
+                    const ratio = this.gridWidth / oldWidth;
+                    const newHeightIndex = this.sizeOptions.findIndex(s => s >= this.gridHeight * ratio);
+                    if (newHeightIndex !== -1) {
+                        this.gridHeight = this.sizeOptions[newHeightIndex];
+                        document.getElementById('heightSlider').value = newHeightIndex;
+                        document.getElementById('heightValue').textContent = this.gridHeight;
+                    }
+                }
+
+                this.setupCanvas();
+            }
+
+            updateHeight(index) {
+                const oldHeight = this.gridHeight;
+                this.gridHeight = this.sizeOptions[index];
+                document.getElementById('heightValue').textContent = this.gridHeight;
+
+                if (this.aspectLocked) {
+                    const ratio = this.gridHeight / oldHeight;
+                    const newWidthIndex = this.sizeOptions.findIndex(s => s >= this.gridWidth * ratio);
+                    if (newWidthIndex !== -1) {
+                        this.gridWidth = this.sizeOptions[newWidthIndex];
+                        document.getElementById('widthSlider').value = newWidthIndex;
+                        document.getElementById('widthValue').textContent = this.gridWidth;
+                    }
+                }
+
+                this.setupCanvas();
+            }
+
+            getCanvasCoords(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                const scaleX = this.canvas.width / rect.width;
+                const scaleY = this.canvas.height / rect.height;
+
+                return {
+                    x: (e.clientX - rect.left) * scaleX,
+                    y: (e.clientY - rect.top) * scaleY
+                };
+            }
+
+            startDrawing(e) {
+                if (!this.drawMode || this.previewMode) return;
+
+                this.isDrawing = true;
+                const coords = this.getCanvasCoords(e);
+
+                this.currentStroke = {
+                    color: this.currentColor,
+                    points: [coords]
+                };
+            }
+
+            draw(e) {
+                if (!this.isDrawing || !this.drawMode || this.previewMode) return;
+
+                const coords = this.getCanvasCoords(e);
+                this.currentStroke.points.push(coords);
+
+                this.render();
+            }
+
+            stopDrawing() {
+                if (!this.isDrawing) return;
+
+                if (this.currentStroke && this.currentStroke.points.length > 0) {
+                    this.strokes.push(this.currentStroke);
+                }
+
+                this.currentStroke = null;
+                this.isDrawing = false;
+                this.render();
+            }
+
+            clearCanvas() {
+                if (confirm('Are you sure you want to clear the canvas?')) {
+                    this.strokes = [];
+                    this.currentStroke = null;
+                    this.render();
+                }
+            }
+
+            render() {
+                // Clear canvas
+                this.ctx.fillStyle = '#F5F5F0';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                if (this.previewMode && this.pixelArtData) {
+                    this.renderPixelArt();
+                } else {
+                    this.renderStrokes();
+                    if (this.showGrid) {
+                        this.renderGrid();
+                    }
+                }
+            }
+
+            renderStrokes() {
+                this.ctx.lineCap = 'round';
+                this.ctx.lineJoin = 'round';
+                this.ctx.lineWidth = 3.5;
+
+                // Render completed strokes
+                this.strokes.forEach(stroke => {
+                    if (stroke.points.length < 2) return;
+
+                    this.ctx.strokeStyle = stroke.color;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+
+                    for (let i = 1; i < stroke.points.length; i++) {
+                        this.ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
+                    }
+
+                    this.ctx.stroke();
+                });
+
+                // Render current stroke
+                if (this.currentStroke && this.currentStroke.points.length > 1) {
+                    this.ctx.strokeStyle = this.currentStroke.color;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(this.currentStroke.points[0].x, this.currentStroke.points[0].y);
+
+                    for (let i = 1; i < this.currentStroke.points.length; i++) {
+                        this.ctx.lineTo(this.currentStroke.points[i].x, this.currentStroke.points[i].y);
+                    }
+
+                    this.ctx.stroke();
+                }
+            }
+
+            renderGrid() {
+                this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+                this.ctx.lineWidth = 1;
+
+                // Vertical lines
+                for (let x = 0; x <= this.gridWidth; x++) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(x * this.cellSize, 0);
+                    this.ctx.lineTo(x * this.cellSize, this.canvas.height);
+                    this.ctx.stroke();
+                }
+
+                // Horizontal lines
+                for (let y = 0; y <= this.gridHeight; y++) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(0, y * this.cellSize);
+                    this.ctx.lineTo(this.canvas.width, y * this.cellSize);
+                    this.ctx.stroke();
+                }
+            }
+
+            convertToPixelArt() {
+                // Get current canvas image data
+                const imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+                const data = imageData.data;
+
+                // Create pixel art data
+                this.pixelArtData = [];
+
+                for (let gy = 0; gy < this.gridHeight; gy++) {
+                    for (let gx = 0; gx < this.gridWidth; gx++) {
+                        const cellColors = {};
+                        let hasColor = false;
+
+                        // Sample all pixels in this cell
+                        for (let cy = 0; cy < this.cellSize; cy++) {
+                            for (let cx = 0; cx < this.cellSize; cx++) {
+                                const px = gx * this.cellSize + cx;
+                                const py = gy * this.cellSize + cy;
+
+                                if (px >= this.canvas.width || py >= this.canvas.height) continue;
+
+                                const i = (py * this.canvas.width + px) * 4;
+                                const r = data[i];
+                                const g = data[i + 1];
+                                const b = data[i + 2];
+
+                                // Check if this is background color
+                                if (r === 245 && g === 245 && b === 240) continue;
+
+                                const colorKey = `${r},${g},${b}`;
+                                cellColors[colorKey] = (cellColors[colorKey] || 0) + 1;
+                                hasColor = true;
+                            }
+                        }
+
+                        if (hasColor) {
+                            // Find dominant color
+                            let maxCount = 0;
+                            let dominantColor = null;
+
+                            for (const [colorKey, count] of Object.entries(cellColors)) {
+                                if (count > maxCount) {
+                                    maxCount = count;
+                                    dominantColor = colorKey;
+                                }
+                            }
+
+                            if (dominantColor) {
+                                const [r, g, b] = dominantColor.split(',').map(Number);
+                                this.pixelArtData.push({
+                                    x: gx,
+                                    y: gy,
+                                    color: `rgb(${r}, ${g}, ${b})`
+                                });
+                            }
+                        }
+                    }
+                }
+
+                this.enterPreviewMode();
+            }
+
+            renderPixelArt() {
+                // Fill background
+                this.ctx.fillStyle = '#F5F5F0';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // Draw pixels
+                this.pixelArtData.forEach(pixel => {
+                    this.ctx.fillStyle = pixel.color;
+                    this.ctx.fillRect(
+                        pixel.x * this.cellSize,
+                        pixel.y * this.cellSize,
+                        this.cellSize,
+                        this.cellSize
+                    );
+                });
+            }
+
+            enterPreviewMode() {
+                this.previewMode = true;
+
+                // Hide drawing controls
+                document.getElementById('drawModeSection').classList.add('hidden');
+                document.getElementById('sizeSection').classList.add('hidden');
+                document.getElementById('colorSection').classList.add('hidden');
+
+                // Show preview actions
+                document.getElementById('previewActions').classList.remove('hidden');
+
+                // Hide convert button
+                document.getElementById('convertBtn').classList.add('hidden');
+                document.getElementById('clearBtn').classList.add('hidden');
+
+                this.render();
+            }
+
+            backToDrawing() {
+                this.previewMode = false;
+
+                // Show drawing controls
+                document.getElementById('drawModeSection').classList.remove('hidden');
+                document.getElementById('sizeSection').classList.remove('hidden');
+                document.getElementById('colorSection').classList.remove('hidden');
+
+                // Hide preview actions
+                document.getElementById('previewActions').classList.add('hidden');
+
+                // Show convert button
+                document.getElementById('convertBtn').classList.remove('hidden');
+                document.getElementById('clearBtn').classList.remove('hidden');
+
+                this.render();
+            }
+
+            showExportModal() {
+                document.getElementById('exportModal').classList.remove('hidden');
+            }
+
+            hideExportModal() {
+                document.getElementById('exportModal').classList.add('hidden');
+            }
+
+            exportImage(transparent) {
+                // Create export canvas at actual pixel art size
+                const exportCanvas = document.createElement('canvas');
+                exportCanvas.width = this.gridWidth;
+                exportCanvas.height = this.gridHeight;
+                const exportCtx = exportCanvas.getContext('2d');
+
+                // Fill background if not transparent
+                if (!transparent) {
+                    exportCtx.fillStyle = '#F5F5F0';
+                    exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+                }
+
+                // Draw pixels
+                this.pixelArtData.forEach(pixel => {
+                    exportCtx.fillStyle = pixel.color;
+                    exportCtx.fillRect(pixel.x, pixel.y, 1, 1);
+                });
+
+                // Download
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+                const filename = `pixel-art-${timestamp}.png`;
+
+                exportCanvas.toBlob(blob => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                });
+
+                this.hideExportModal();
+            }
+        }
+
+        // Initialize app
+        const app = new PixelArtCanvas();
+    </script>
+</body>
+</html>
