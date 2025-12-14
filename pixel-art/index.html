@@ -24,7 +24,7 @@
         .app-container {
             height: 100vh;
             display: flex;
-            flex-direction: column;
+            position: relative;
         }
 
         .canvas-wrapper {
@@ -54,75 +54,82 @@
             cursor: not-allowed;
         }
 
+        /* Side Panel */
         .controls-panel {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 280px;
             background: rgba(255, 255, 255, 0.98);
-            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
             transition: transform 0.3s ease;
-            max-height: 50vh;
+            z-index: 100;
             overflow-y: auto;
+            overflow-x: hidden;
         }
 
         .controls-panel.hidden {
-            transform: translateY(100%);
+            transform: translateX(-100%);
         }
 
         .controls-header {
+            position: sticky;
+            top: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 14px 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px 20px;
-            border-bottom: 2px solid #e0e0e0;
-            position: sticky;
-            top: 0;
-            background: white;
             z-index: 10;
         }
 
         .controls-header h2 {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
-            color: #333;
         }
 
-        .toggle-controls-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+        .close-btn {
+            background: rgba(255, 255, 255, 0.2);
             border: none;
-            padding: 8px 16px;
+            color: white;
+            width: 28px;
+            height: 28px;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 13px;
-            font-weight: 600;
-            transition: all 0.2s;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
         }
 
-        .toggle-controls-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
         }
 
         .controls-content {
-            padding: 20px;
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
+            padding: 12px;
         }
 
         .control-section {
-            padding-bottom: 20px;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
             border-bottom: 1px solid #e0e0e0;
         }
 
         .control-section:last-child {
+            margin-bottom: 0;
             padding-bottom: 0;
             border-bottom: none;
         }
 
         .control-section h3 {
-            font-size: 13px;
+            font-size: 11px;
             font-weight: 600;
-            color: #555;
-            margin-bottom: 12px;
+            color: #666;
+            margin-bottom: 10px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
@@ -130,17 +137,13 @@
         .draw-mode-toggle {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 12px;
+            gap: 10px;
+            padding: 10px;
             background: #f8f8f8;
-            border-radius: 8px;
+            border-radius: 6px;
             cursor: pointer;
             user-select: none;
             transition: all 0.2s;
-        }
-
-        .draw-mode-toggle:hover {
-            background: #f0f0f0;
         }
 
         .draw-mode-toggle.active {
@@ -150,11 +153,12 @@
 
         .toggle-switch {
             position: relative;
-            width: 50px;
-            height: 26px;
+            width: 44px;
+            height: 24px;
             background: #ccc;
-            border-radius: 13px;
+            border-radius: 12px;
             transition: background 0.2s;
+            flex-shrink: 0;
         }
 
         .draw-mode-toggle.active .toggle-switch {
@@ -166,38 +170,38 @@
             position: absolute;
             top: 3px;
             left: 3px;
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             background: white;
             border-radius: 50%;
             transition: transform 0.2s;
         }
 
         .draw-mode-toggle.active .toggle-switch::after {
-            transform: translateX(24px);
+            transform: translateX(20px);
         }
 
         .size-controls {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
         }
 
         .size-control {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
         }
 
         .size-control label {
-            min-width: 60px;
-            font-size: 14px;
+            min-width: 45px;
+            font-size: 12px;
             font-weight: 500;
         }
 
         .size-control input[type="range"] {
             flex: 1;
-            height: 6px;
+            height: 5px;
             border-radius: 3px;
             background: #e0e0e0;
             outline: none;
@@ -207,16 +211,16 @@
         .size-control input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
             border-radius: 50%;
             background: #667eea;
             cursor: pointer;
         }
 
         .size-control input[type="range"]::-moz-range-thumb {
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
             border-radius: 50%;
             background: #667eea;
             cursor: pointer;
@@ -224,10 +228,11 @@
         }
 
         .size-control .value {
-            min-width: 40px;
+            min-width: 32px;
             text-align: right;
             font-weight: 600;
             color: #667eea;
+            font-size: 12px;
         }
 
         .checkbox-control {
@@ -236,9 +241,10 @@
             gap: 8px;
             cursor: pointer;
             user-select: none;
-            padding: 8px;
+            padding: 6px;
             border-radius: 6px;
             transition: background 0.2s;
+            font-size: 12px;
         }
 
         .checkbox-control:hover {
@@ -246,24 +252,24 @@
         }
 
         .checkbox-control input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
             cursor: pointer;
         }
 
         .color-palette {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
-            gap: 8px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
         }
 
         .color-swatch {
-            width: 44px;
-            height: 44px;
-            border-radius: 8px;
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s;
-            border: 3px solid transparent;
+            border: 2px solid transparent;
             position: relative;
         }
 
@@ -274,7 +280,7 @@
         .color-swatch.selected {
             border-color: #333;
             transform: scale(1.15);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         }
 
         .color-swatch.selected::after {
@@ -283,7 +289,7 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 20px;
+            font-size: 16px;
             color: white;
             text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
         }
@@ -291,32 +297,37 @@
         .current-color {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 12px;
+            gap: 10px;
+            padding: 8px;
             background: #f8f8f8;
-            border-radius: 8px;
-            margin-bottom: 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
         }
 
         .current-color-box {
-            width: 40px;
-            height: 40px;
+            width: 32px;
+            height: 32px;
             border-radius: 6px;
             border: 2px solid #333;
+            flex-shrink: 0;
+        }
+
+        .current-color span {
+            font-size: 12px;
         }
 
         .button-group {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            gap: 8px;
         }
 
         button {
-            padding: 12px 20px;
-            font-size: 13px;
+            padding: 10px 16px;
+            font-size: 12px;
             font-weight: 600;
             border: none;
-            border-radius: 8px;
+            border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s;
             text-transform: uppercase;
@@ -326,12 +337,12 @@
         button.primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
         }
 
         button.primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
         }
 
         button.secondary {
@@ -361,6 +372,41 @@
             transform: scale(0.98);
         }
 
+        /* Floating Toggle Button */
+        .floating-toggle {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            z-index: 99;
+            transition: all 0.3s ease;
+        }
+
+        .floating-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .floating-toggle:active {
+            transform: scale(0.95);
+        }
+
+        .floating-toggle.hidden {
+            transform: translateX(-80px);
+            opacity: 0;
+        }
+
         .hidden {
             display: none !important;
         }
@@ -383,57 +429,36 @@
             background: white;
             border-radius: 12px;
             padding: 24px;
-            max-width: 400px;
+            max-width: 360px;
             width: 100%;
         }
 
         .export-modal-content h2 {
-            margin-bottom: 16px;
-            font-size: 20px;
+            margin-bottom: 12px;
+            font-size: 18px;
         }
 
         .export-modal-content p {
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             color: #666;
-            font-size: 14px;
+            font-size: 13px;
         }
 
         @media (min-width: 768px) {
-            .controls-content {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .control-section {
-                border-bottom: none;
-                padding-bottom: 0;
-            }
-
-            .color-palette {
-                grid-template-columns: repeat(8, 1fr);
-            }
-        }
-
-        @media (min-width: 1024px) {
-            .controls-content {
-                grid-template-columns: repeat(4, 1fr);
+            .controls-panel {
+                width: 320px;
             }
         }
     </style>
 </head>
 <body>
     <div class="app-container">
-        <div class="canvas-wrapper">
-            <div class="canvas-container">
-                <canvas id="drawingCanvas"></canvas>
-            </div>
-        </div>
+        <button class="floating-toggle" id="floatingToggle">☰</button>
 
         <div class="controls-panel" id="controlsPanel">
             <div class="controls-header">
                 <h2>Controls</h2>
-                <button class="toggle-controls-btn" id="toggleControlsBtn">
-                    Hide Controls
-                </button>
+                <button class="close-btn" id="closeBtn">✕</button>
             </div>
             <div class="controls-content">
                 <div class="control-section" id="drawModeSection">
@@ -486,12 +511,18 @@
                 </div>
 
                 <div class="control-section hidden" id="previewActions">
-                    <h3>Preview Actions</h3>
+                    <h3>Preview</h3>
                     <div class="button-group">
-                        <button class="secondary" id="backBtn">Back to Draw</button>
+                        <button class="secondary" id="backBtn">Edit</button>
                         <button class="primary" id="exportBtn">Export</button>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <div class="canvas-wrapper">
+            <div class="canvas-container">
+                <canvas id="drawingCanvas"></canvas>
             </div>
         </div>
     </div>
@@ -515,13 +546,11 @@
                 this.canvas = document.getElementById('drawingCanvas');
                 this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
 
-                // Size options
                 this.sizeOptions = [24, 36, 48, 64, 96, 128, 192, 256];
                 this.gridWidth = 64;
                 this.gridHeight = 64;
                 this.cellSize = 8;
 
-                // State
                 this.drawMode = false;
                 this.isDrawing = false;
                 this.showGrid = true;
@@ -530,12 +559,10 @@
                 this.currentColor = '#000000';
                 this.controlsVisible = true;
 
-                // Drawing data
                 this.strokes = [];
                 this.currentStroke = null;
                 this.pixelArtData = null;
 
-                // Colors
                 this.colors = [
                     '#000000', '#FFFFFF', '#FF0000', '#8B0000',
                     '#FFA500', '#FFFF00', '#00FF00', '#006400',
@@ -555,11 +582,8 @@
             }
 
             setupCanvas() {
-                const controlsHeight = this.controlsVisible ?
-                    document.getElementById('controlsPanel').offsetHeight : 0;
-
                 const maxWidth = window.innerWidth - 50;
-                const maxHeight = window.innerHeight - controlsHeight - 50;
+                const maxHeight = window.innerHeight - 50;
 
                 const cellWidth = Math.floor(maxWidth / this.gridWidth);
                 const cellHeight = Math.floor(maxHeight / this.gridHeight);
@@ -572,17 +596,18 @@
             }
 
             setupEventListeners() {
-                // Toggle controls
-                document.getElementById('toggleControlsBtn').addEventListener('click', () => {
-                    this.toggleControls();
+                document.getElementById('floatingToggle').addEventListener('click', () => {
+                    this.showControls();
                 });
 
-                // Draw mode toggle
+                document.getElementById('closeBtn').addEventListener('click', () => {
+                    this.hideControls();
+                });
+
                 document.getElementById('drawModeToggle').addEventListener('click', () => {
                     this.toggleDrawMode();
                 });
 
-                // Canvas drawing
                 this.canvas.addEventListener('mousedown', (e) => this.startDrawing(e));
                 this.canvas.addEventListener('mousemove', (e) => this.draw(e));
                 this.canvas.addEventListener('mouseup', () => this.stopDrawing());
@@ -598,7 +623,6 @@
                 });
                 this.canvas.addEventListener('touchend', () => this.stopDrawing());
 
-                // Size controls
                 document.getElementById('widthSlider').addEventListener('input', (e) => {
                     this.updateWidth(e.target.value);
                 });
@@ -613,35 +637,28 @@
                     this.render();
                 });
 
-                // Action buttons
                 document.getElementById('clearBtn').addEventListener('click', () => this.clearCanvas());
                 document.getElementById('convertBtn').addEventListener('click', () => this.convertToPixelArt());
                 document.getElementById('backBtn').addEventListener('click', () => this.backToDrawing());
                 document.getElementById('exportBtn').addEventListener('click', () => this.showExportModal());
 
-                // Export modal
                 document.getElementById('exportSolidBtn').addEventListener('click', () => this.exportImage(false));
                 document.getElementById('exportTransparentBtn').addEventListener('click', () => this.exportImage(true));
                 document.getElementById('cancelExportBtn').addEventListener('click', () => this.hideExportModal());
 
-                // Resize
                 window.addEventListener('resize', () => this.setupCanvas());
             }
 
-            toggleControls() {
-                this.controlsVisible = !this.controlsVisible;
-                const panel = document.getElementById('controlsPanel');
-                const btn = document.getElementById('toggleControlsBtn');
+            showControls() {
+                this.controlsVisible = true;
+                document.getElementById('controlsPanel').classList.remove('hidden');
+                document.getElementById('floatingToggle').classList.add('hidden');
+            }
 
-                if (this.controlsVisible) {
-                    panel.classList.remove('hidden');
-                    btn.textContent = 'Hide Controls';
-                } else {
-                    panel.classList.add('hidden');
-                    btn.textContent = 'Show Controls';
-                }
-
-                setTimeout(() => this.setupCanvas(), 350);
+            hideControls() {
+                this.controlsVisible = false;
+                document.getElementById('controlsPanel').classList.add('hidden');
+                document.getElementById('floatingToggle').classList.remove('hidden');
             }
 
             renderColorPalette() {
