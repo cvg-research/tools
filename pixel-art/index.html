@@ -50,10 +50,6 @@
             touch-action: none;
         }
 
-        #drawingCanvas.draw-mode-off {
-            cursor: not-allowed;
-        }
-
         /* Side Panel */
         .controls-panel {
             position: fixed;
@@ -132,53 +128,6 @@
             margin-bottom: 10px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-        }
-
-        .draw-mode-toggle {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px;
-            background: #f8f8f8;
-            border-radius: 6px;
-            cursor: pointer;
-            user-select: none;
-            transition: all 0.2s;
-        }
-
-        .draw-mode-toggle.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .toggle-switch {
-            position: relative;
-            width: 44px;
-            height: 24px;
-            background: #ccc;
-            border-radius: 12px;
-            transition: background 0.2s;
-            flex-shrink: 0;
-        }
-
-        .draw-mode-toggle.active .toggle-switch {
-            background: #4CAF50;
-        }
-
-        .toggle-switch::after {
-            content: '';
-            position: absolute;
-            top: 3px;
-            left: 3px;
-            width: 18px;
-            height: 18px;
-            background: white;
-            border-radius: 50%;
-            transition: transform 0.2s;
-        }
-
-        .draw-mode-toggle.active .toggle-switch::after {
-            transform: translateX(20px);
         }
 
         .size-controls {
@@ -444,6 +393,16 @@
             font-size: 13px;
         }
 
+        .share-notice {
+            margin-top: 12px;
+            padding: 10px;
+            background: #e8f5e9;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #2e7d32;
+            text-align: center;
+        }
+
         @media (min-width: 768px) {
             .controls-panel {
                 width: 320px;
@@ -461,26 +420,18 @@
                 <button class="close-btn" id="closeBtn">✕</button>
             </div>
             <div class="controls-content">
-                <div class="control-section" id="drawModeSection">
-                    <h3>Draw Mode</h3>
-                    <div class="draw-mode-toggle" id="drawModeToggle">
-                        <div class="toggle-switch"></div>
-                        <span id="drawModeLabel">OFF</span>
-                    </div>
-                </div>
-
                 <div class="control-section" id="sizeSection">
                     <h3>Canvas Size</h3>
                     <div class="size-controls">
                         <div class="size-control">
                             <label>Width:</label>
-                            <input type="range" id="widthSlider" min="0" max="7" value="3" step="1">
-                            <span class="value" id="widthValue">64</span>
+                            <input type="range" id="widthSlider" min="0" max="4" value="2" step="1">
+                            <span class="value" id="widthValue">24</span>
                         </div>
                         <div class="size-control">
                             <label>Height:</label>
-                            <input type="range" id="heightSlider" min="0" max="7" value="3" step="1">
-                            <span class="value" id="heightValue">64</span>
+                            <input type="range" id="heightSlider" min="0" max="4" value="2" step="1">
+                            <span class="value" id="heightValue">24</span>
                         </div>
                         <label class="checkbox-control">
                             <input type="checkbox" id="aspectLock" checked>
@@ -516,6 +467,9 @@
                         <button class="secondary" id="backBtn">Edit</button>
                         <button class="primary" id="exportBtn">Export</button>
                     </div>
+                    <div style="margin-top: 8px;">
+                        <button class="secondary" id="shareBtn" style="width: 100%;">Share</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -540,18 +494,27 @@
         </div>
     </div>
 
+    <div id="shareModal" class="export-modal hidden">
+        <div class="export-modal-content">
+            <h2>Share Your Art</h2>
+            <p>Link copied to clipboard!</p>
+            <div class="share-notice">Anyone with this link can view and edit your pixel art</div>
+            <br>
+            <button class="primary" id="closeShareBtn" style="width: 100%;">Close</button>
+        </div>
+    </div>
+
     <script>
         class PixelArtCanvas {
             constructor() {
                 this.canvas = document.getElementById('drawingCanvas');
                 this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
 
-                this.sizeOptions = [24, 36, 48, 64, 96, 128, 192, 256];
-                this.gridWidth = 64;
-                this.gridHeight = 64;
+                this.sizeOptions = [16, 20, 24, 32, 40];
+                this.gridWidth = 24;
+                this.gridHeight = 24;
                 this.cellSize = 8;
 
-                this.drawMode = false;
                 this.isDrawing = false;
                 this.showGrid = true;
                 this.aspectLocked = true;
@@ -574,11 +537,126 @@
             }
 
             init() {
+                this.loadFromURL();
                 this.setupCanvas();
                 this.setupEventListeners();
                 this.renderColorPalette();
                 this.updateCurrentColor();
                 this.render();
+            }
+
+            loadFromURL() {
+                const params = new URLSearchParams(window.location.search);
+                const data = params.get('d');
+                if (data) {
+                    this.decodePixelArt(data);
+                }
+            }
+
+            decodePixelArt(encoded) {
+                try {
+                    const parts = encoded.split('_');
+                    if (parts.length !== 3) return;
+
+                    const width = parseInt(parts[0]);
+                    const height = parseInt(parts[1]);
+                    const pixels = parts[2];
+
+                    if (width > 40 || height > 40) return;
+
+                    this.gridWidth = width;
+                    this.gridHeight = height;
+
+                    const widthIndex = this.sizeOptions.indexOf(width);
+                    const heightIndex = this.sizeOptions.indexOf(height);
+                    if (widthIndex !== -1) {
+                        document.getElementById('widthSlider').value = widthIndex;
+                        document.getElementById('widthValue').textContent = width;
+                    }
+                    if (heightIndex !== -1) {
+                        document.getElementById('heightSlider').value = heightIndex;
+                        document.getElementById('heightValue').textContent = height;
+                    }
+
+                    this.pixelArtData = [];
+                    let index = 0;
+
+                    for (let y = 0; y < height; y++) {
+                        for (let x = 0; x < width; x++) {
+                            if (index >= pixels.length) break;
+
+                            const char = pixels[index++];
+                            if (char === 'X') continue;
+
+                            let colorIndex;
+                            if (char >= '0' && char <= '9') {
+                                colorIndex = parseInt(char);
+                            } else if (char >= 'A' && char <= 'F') {
+                                colorIndex = 10 + (char.charCodeAt(0) - 'A'.charCodeAt(0));
+                            } else {
+                                continue;
+                            }
+
+                            if (colorIndex < this.colors.length) {
+                                this.pixelArtData.push({
+                                    x: x,
+                                    y: y,
+                                    color: this.colors[colorIndex]
+                                });
+                            }
+                        }
+                    }
+
+                    if (this.pixelArtData.length > 0) {
+                        this.enterPreviewMode();
+                    }
+                } catch (e) {
+                    console.error('Failed to decode pixel art:', e);
+                }
+            }
+
+            encodePixelArt() {
+                if (!this.pixelArtData) return null;
+
+                const grid = Array(this.gridHeight).fill(null).map(() =>
+                    Array(this.gridWidth).fill('X')
+                );
+
+                this.pixelArtData.forEach(pixel => {
+                    const colorIndex = this.colors.indexOf(pixel.color);
+                    if (colorIndex === -1) return;
+
+                    let char;
+                    if (colorIndex <= 9) {
+                        char = colorIndex.toString();
+                    } else if (colorIndex <= 15) {
+                        char = String.fromCharCode('A'.charCodeAt(0) + (colorIndex - 10));
+                    } else {
+                        char = 'X';
+                    }
+
+                    if (pixel.y < this.gridHeight && pixel.x < this.gridWidth) {
+                        grid[pixel.y][pixel.x] = char;
+                    }
+                });
+
+                const pixels = grid.map(row => row.join('')).join('');
+                return `${this.gridWidth}_${this.gridHeight}_${pixels}`;
+            }
+
+            sharePixelArt() {
+                const encoded = this.encodePixelArt();
+                if (!encoded) return;
+
+                const url = new URL(window.location.href);
+                url.search = `?d=${encoded}`;
+                const shareURL = url.toString();
+
+                navigator.clipboard.writeText(shareURL).then(() => {
+                    document.getElementById('shareModal').classList.remove('hidden');
+                }).catch(err => {
+                    alert('Failed to copy link. Please copy manually: ' + shareURL);
+                });
             }
 
             setupCanvas() {
@@ -587,7 +665,7 @@
 
                 const cellWidth = Math.floor(maxWidth / this.gridWidth);
                 const cellHeight = Math.floor(maxHeight / this.gridHeight);
-                this.cellSize = Math.max(4, Math.min(cellWidth, cellHeight, 20));
+                this.cellSize = Math.max(4, Math.min(cellWidth, cellHeight, 25));
 
                 this.canvas.width = this.gridWidth * this.cellSize;
                 this.canvas.height = this.gridHeight * this.cellSize;
@@ -602,10 +680,6 @@
 
                 document.getElementById('closeBtn').addEventListener('click', () => {
                     this.hideControls();
-                });
-
-                document.getElementById('drawModeToggle').addEventListener('click', () => {
-                    this.toggleDrawMode();
                 });
 
                 this.canvas.addEventListener('mousedown', (e) => this.startDrawing(e));
@@ -641,10 +715,15 @@
                 document.getElementById('convertBtn').addEventListener('click', () => this.convertToPixelArt());
                 document.getElementById('backBtn').addEventListener('click', () => this.backToDrawing());
                 document.getElementById('exportBtn').addEventListener('click', () => this.showExportModal());
+                document.getElementById('shareBtn').addEventListener('click', () => this.sharePixelArt());
 
                 document.getElementById('exportSolidBtn').addEventListener('click', () => this.exportImage(false));
                 document.getElementById('exportTransparentBtn').addEventListener('click', () => this.exportImage(true));
                 document.getElementById('cancelExportBtn').addEventListener('click', () => this.hideExportModal());
+
+                document.getElementById('closeShareBtn').addEventListener('click', () => {
+                    document.getElementById('shareModal').classList.add('hidden');
+                });
 
                 window.addEventListener('resize', () => this.setupCanvas());
             }
@@ -687,22 +766,6 @@
                 document.getElementById('currentColorBox').style.backgroundColor = this.currentColor;
             }
 
-            toggleDrawMode() {
-                this.drawMode = !this.drawMode;
-                const toggle = document.getElementById('drawModeToggle');
-                const label = document.getElementById('drawModeLabel');
-
-                if (this.drawMode) {
-                    toggle.classList.add('active');
-                    label.textContent = 'ON';
-                    this.canvas.classList.remove('draw-mode-off');
-                } else {
-                    toggle.classList.remove('active');
-                    label.textContent = 'OFF';
-                    this.canvas.classList.add('draw-mode-off');
-                }
-            }
-
             updateWidth(index) {
                 const oldWidth = this.gridWidth;
                 this.gridWidth = this.sizeOptions[index];
@@ -710,7 +773,8 @@
 
                 if (this.aspectLocked) {
                     const ratio = this.gridWidth / oldWidth;
-                    const newHeightIndex = this.sizeOptions.findIndex(s => s >= this.gridHeight * ratio);
+                    const newHeight = Math.round(this.gridHeight * ratio);
+                    const newHeightIndex = this.sizeOptions.findIndex(s => s >= newHeight);
                     if (newHeightIndex !== -1) {
                         this.gridHeight = this.sizeOptions[newHeightIndex];
                         document.getElementById('heightSlider').value = newHeightIndex;
@@ -728,7 +792,8 @@
 
                 if (this.aspectLocked) {
                     const ratio = this.gridHeight / oldHeight;
-                    const newWidthIndex = this.sizeOptions.findIndex(s => s >= this.gridWidth * ratio);
+                    const newWidth = Math.round(this.gridWidth * ratio);
+                    const newWidthIndex = this.sizeOptions.findIndex(s => s >= newWidth);
                     if (newWidthIndex !== -1) {
                         this.gridWidth = this.sizeOptions[newWidthIndex];
                         document.getElementById('widthSlider').value = newWidthIndex;
@@ -751,7 +816,7 @@
             }
 
             startDrawing(e) {
-                if (!this.drawMode || this.previewMode) return;
+                if (this.previewMode) return;
 
                 this.isDrawing = true;
                 const coords = this.getCanvasCoords(e);
@@ -763,7 +828,7 @@
             }
 
             draw(e) {
-                if (!this.isDrawing || !this.drawMode || this.previewMode) return;
+                if (!this.isDrawing || this.previewMode) return;
 
                 const coords = this.getCanvasCoords(e);
                 this.currentStroke.points.push(coords);
@@ -808,7 +873,7 @@
             renderStrokes() {
                 this.ctx.lineCap = 'round';
                 this.ctx.lineJoin = 'round';
-                this.ctx.lineWidth = 3.5;
+                this.ctx.lineWidth = Math.max(6, this.cellSize * 0.5);
 
                 this.strokes.forEach(stroke => {
                     if (stroke.points.length < 2) return;
@@ -838,7 +903,7 @@
             }
 
             renderGrid() {
-                this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+                this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.15)';
                 this.ctx.lineWidth = 1;
 
                 for (let x = 0; x <= this.gridWidth; x++) {
@@ -931,7 +996,6 @@
             enterPreviewMode() {
                 this.previewMode = true;
 
-                document.getElementById('drawModeSection').classList.add('hidden');
                 document.getElementById('sizeSection').classList.add('hidden');
                 document.getElementById('colorSection').classList.add('hidden');
                 document.getElementById('actionsSection').classList.add('hidden');
@@ -943,7 +1007,6 @@
             backToDrawing() {
                 this.previewMode = false;
 
-                document.getElementById('drawModeSection').classList.remove('hidden');
                 document.getElementById('sizeSection').classList.remove('hidden');
                 document.getElementById('colorSection').classList.remove('hidden');
                 document.getElementById('actionsSection').classList.remove('hidden');
